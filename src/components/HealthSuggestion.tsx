@@ -1,29 +1,40 @@
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export function HealthSuggestion() {
   return (
-    <section className="py-12 bg-primary">
+    <section className="py-16 bg-white">
       <div className="container-custom">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="w-full md:w-3/4 text-white">
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">
-              Do you need any expert suggestion about your health condition?
-            </h2>
-            <p className="mb-6">
-              We have a dedicated team of experienced doctors to give you suggestion when you are at a critical
-              health condition or you are confused.
-            </p>
-          </div>
-          <div className="w-full md:w-1/4 flex justify-end">
-            <Link href="/request-suggestion">
-              <Button
-                className="bg-secondary text-primary hover:bg-secondary/90 font-medium px-6"
-              >
-                Request
-              </Button>
-            </Link>
+        <div className="bg-gradient-to-r from-primary to-secondary/90 rounded-lg overflow-hidden">
+          <div className="flex flex-col md:flex-row items-center">
+            {/* Image Column */}
+            <div className="md:w-1/2">
+              <div className="relative h-64 md:h-80 w-full">
+                <Image
+                  src="https://ext.same-assets.com/174619264/2985316974.webp"
+                  alt="Health suggestion"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Content Column */}
+            <div className="md:w-1/2 p-8 text-white">
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                Do you need any expert suggestion about your health condition?
+              </h2>
+              <p className="mb-6">
+                We have a dedicated team of experienced doctors to give you suggestion when you are at a critical health condition or you are confused.
+              </p>
+              <Link href="/request-suggestion">
+                <Button className="bg-white text-primary hover:bg-gray-100 transition-colors">
+                  Request
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

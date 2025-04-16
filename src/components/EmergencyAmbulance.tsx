@@ -3,26 +3,34 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronRight } from "lucide-react";
 
 export function EmergencyAmbulance() {
   const ambulanceServices = [
     {
+      id: "ac-ambulance",
       title: "AC Ambulance",
-      image: "https://ext.same-assets.com/690263052/3413034796.webp",
+      image: "https://ext.same-assets.com/174619264/3776423224.webp",
       description: "Get ambulance within 30 minutes*",
+      subDescription: "24/7 affordable quality service",
+      contactInfo: "We are just a call away: 01405600700",
       link: "/ambulance/ac-ambulance"
     },
     {
+      id: "icu-ambulance",
       title: "ICU Ambulance",
-      image: "https://ext.same-assets.com/690263052/2349005020.webp",
+      image: "https://ext.same-assets.com/690263052/1071786512.webp",
       description: "Get ambulance within 30 minutes*",
+      subDescription: "24/7 affordable quality service",
+      contactInfo: "We are just a call away: 01405600700",
       link: "/ambulance/icu-ambulance"
     },
     {
+      id: "air-ambulance",
       title: "AIR Ambulance",
-      image: "https://ext.same-assets.com/690263052/898804201.webp",
+      image: "https://ext.same-assets.com/690263052/3669179665.webp",
       description: "Get ambulance within 60 minutes*",
+      subDescription: "24/7 affordable quality service",
+      contactInfo: "We are just a call away: 01405600700",
       link: "/ambulance/air-ambulance"
     }
   ];
@@ -30,41 +38,40 @@ export function EmergencyAmbulance() {
   return (
     <section className="py-16 bg-gray-50">
       <div className="container-custom">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-primary">
-            We are ready to help at your emergency
-          </h2>
-          <Link href="/ambulance">
-            <Button variant="ghost" className="text-primary hover:text-secondary flex items-center gap-1">
-              View all <ChevronRight className="h-4 w-4" />
-            </Button>
+        <div className="flex flex-col md:flex-row justify-between items-center mb-10">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              We are ready to help at your emergency
+            </h2>
+          </div>
+          <Link href="/ambulance" className="text-primary hover:text-secondary mt-4 md:mt-0 font-medium">
+            View all
           </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {ambulanceServices.map((service) => (
-            <Card
-              key={service.title}
-              className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow"
-            >
-              <div className="relative h-52 w-full">
-                <Image
-                  src={service.image}
-                  alt={service.title}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <CardContent className="p-4">
-                <Link href={service.link}>
-                  <h3 className="text-lg font-semibold text-primary mb-2 hover:text-secondary transition-colors">
+            <Card key={service.id} className="overflow-hidden hover:shadow-lg transition-shadow border border-gray-100">
+              <Link href={service.link}>
+                <div className="relative h-48 w-full">
+                  <Image
+                    src={service.image}
+                    alt={service.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <CardContent className="p-4">
+                  <h3 className="font-semibold text-lg text-primary mb-4">
                     {service.title}
                   </h3>
-                </Link>
-                <p className="text-gray-600 mb-2">{service.description}</p>
-                <p className="text-gray-600 mb-3">24/7 affordable quality service</p>
-                <p className="text-gray-600">We are just a call away: 01405600700</p>
-              </CardContent>
+                  <div className="space-y-1 text-sm text-gray-600 mb-4">
+                    <p>{service.description}</p>
+                    <p>{service.subDescription}</p>
+                    <p>{service.contactInfo}</p>
+                  </div>
+                </CardContent>
+              </Link>
             </Card>
           ))}
         </div>

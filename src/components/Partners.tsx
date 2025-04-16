@@ -1,82 +1,74 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
 
 export function Partners() {
   const partners = [
     {
-      id: 1,
       name: "Popular Diagnostic",
-      logo: "https://ext.same-assets.com/174619264/3776423225.webp",
+      logo: "https://ext.same-assets.com/174619264/1782439561.webp",
       link: "https://www.populardiagnostic.com/"
     },
     {
-      id: 2,
-      name: "BD Fertility Hospital",
-      logo: "https://ext.same-assets.com/174619264/3776423226.webp",
+      name: "Bangladesh Fertility Hospital",
+      logo: "https://ext.same-assets.com/174619264/2364981753.webp",
       link: "https://www.bdfertilityhospital.com/"
     },
     {
-      id: 3,
       name: "FCH Limited",
-      logo: "https://ext.same-assets.com/174619264/3776423227.webp",
+      logo: "https://ext.same-assets.com/174619264/3579164283.webp",
       link: "https://www.facebook.com/FCHLimited"
     },
     {
-      id: 4,
       name: "Ashoka Rescue",
-      logo: "https://ext.same-assets.com/174619264/3776423228.webp",
+      logo: "https://ext.same-assets.com/174619264/4715928364.webp",
       link: "https://www.ashokarescue.com/"
     },
     {
-      id: 5,
       name: "Manipal Hospitals",
-      logo: "https://ext.same-assets.com/174619264/3776423229.webp",
+      logo: "https://ext.same-assets.com/174619264/1526394872.webp",
       link: "https://www.manipalhospitalsglobal.com/"
     },
     {
-      id: 6,
       name: "Rushmono",
-      logo: "https://ext.same-assets.com/174619264/3776423230.webp",
+      logo: "https://ext.same-assets.com/174619264/2918743652.webp",
       link: "http://rushmono.com/"
-    },
-    {
-      id: 7,
-      name: "PhysioZone",
-      logo: "https://ext.same-assets.com/174619264/3776423231.webp",
-      link: "https://physiozonebd.com/"
     }
   ];
 
   return (
-    <section className="py-10 bg-white">
+    <section className="py-16 bg-gray-50">
       <div className="container-custom">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-primary">
-            Our partners
-          </h2>
-          <Link href="/our-partners">
-            <Button variant="ghost" className="text-primary hover:text-secondary flex items-center gap-1">
-              View all <ChevronRight className="h-4 w-4" />
-            </Button>
+        <div className="flex flex-col md:flex-row justify-between items-center mb-12">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              Our partners
+            </h2>
+            <p className="text-gray-600">
+              We pride in ourselves for some of our partners
+            </p>
+          </div>
+          <Link href="/our-partners" className="text-primary hover:text-secondary mt-4 md:mt-0 font-medium">
+            View all
           </Link>
         </div>
-        <p className="text-gray-600 mb-8">We pride in ourselves for some of our partners</p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-6">
           {partners.map((partner) => (
-            <Link key={partner.id} href={partner.link} target="_blank" rel="noopener noreferrer">
-              <div className="h-16 relative bg-white border border-gray-100 rounded-md hover:shadow-md transition-shadow flex items-center justify-center p-2">
-                <div className="relative h-full w-full">
-                  <Image
-                    src={partner.logo}
-                    alt={partner.name}
-                    fill
-                    className="object-contain filter grayscale hover:grayscale-0 transition-all"
-                  />
-                </div>
+            <Link
+              key={partner.name}
+              href={partner.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center bg-white p-6 rounded-lg border border-gray-100 hover:shadow-md transition-all h-40"
+            >
+              <div className="relative h-16 w-full">
+                <Image
+                  src={partner.logo}
+                  alt={partner.name}
+                  fill
+                  className="object-contain"
+                />
               </div>
             </Link>
           ))}

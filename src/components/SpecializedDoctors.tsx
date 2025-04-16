@@ -1,12 +1,11 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function SpecializedDoctors() {
-  const specializations = [
+  const specialties = [
     {
       title: "Gynecologist & Obstetrician",
       icon: "https://ext.same-assets.com/174619264/661419782.webp",
@@ -36,53 +35,53 @@ export function SpecializedDoctors() {
       title: "Otolaryngologists (ENT)",
       icon: "https://ext.same-assets.com/174619264/914419258.webp",
       link: "/search?type=doctor&q=Otolaryngologists%20(ENT)"
-    },
+    }
   ];
 
   return (
     <section className="py-16 bg-white">
       <div className="container-custom">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold text-primary">
-            Consult our top specialized doctors
-          </h2>
-          <Link href="/specializations">
-            <Button variant="ghost" className="text-primary hover:text-secondary flex items-center gap-1">
-              View all <ChevronRight className="h-4 w-4" />
-            </Button>
+        <div className="flex flex-col md:flex-row justify-between items-center mb-10">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              Consult our top specialized doctors
+            </h2>
+            <p className="text-gray-600">
+              Our doctors are ready to serve you 24/7
+            </p>
+          </div>
+          <Link href="/specializations" className="text-primary hover:text-secondary mt-4 md:mt-0 font-medium flex items-center">
+            View all
           </Link>
         </div>
 
-        <p className="text-gray-600 mb-8">Our doctors are ready to serve you 24/7</p>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {specializations.map((specialization) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          {specialties.map((specialty) => (
             <Card
-              key={specialization.title}
-              className="h-full hover:shadow-md transition-shadow border border-gray-200 overflow-hidden"
+              key={specialty.title}
+              className="overflow-hidden hover:shadow-lg transition-shadow border border-gray-100"
             >
-              <Link href={specialization.link} className="block h-full">
-                <CardContent className="p-4 flex flex-col items-center text-center h-full">
-                  <div className="mb-3 relative h-24 w-24">
+              <CardContent className="p-4 flex flex-col items-center justify-center">
+                <Link href={specialty.link} className="text-center group">
+                  <div className="relative w-16 h-16 mx-auto mb-4">
                     <Image
-                      src={specialization.icon}
-                      alt={specialization.title}
+                      src={specialty.icon}
+                      alt={specialty.title}
                       fill
                       className="object-contain"
                     />
                   </div>
-                  <h3 className="text-sm font-medium text-primary leading-tight mb-2">
-                    {specialization.title}
+                  <h3 className="text-sm font-semibold text-primary mb-2 line-clamp-2 h-10">
+                    {specialty.title}
                   </h3>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-auto w-full text-xs border-secondary text-primary hover:bg-secondary hover:text-white"
+                    variant="link"
+                    className="text-secondary p-0 h-auto text-sm group-hover:underline"
                   >
                     Consult Now
                   </Button>
-                </CardContent>
-              </Link>
+                </Link>
+              </CardContent>
             </Card>
           ))}
         </div>
