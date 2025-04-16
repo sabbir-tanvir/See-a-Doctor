@@ -38,7 +38,7 @@ export default function AmbulancePage() {
     {
       id: "als-ambulance",
       title: "ALS Ambulance Service",
-      image: "https://img.sasthyaseba.com/LBUDK0RCAzICFSpfVmcGCwhlWD0/ambulances/5/CYxicTgJYTLCAaEzkh6pinw2IBFZQCC8kssMGKW8/als-ambulance.webp",
+      image: "https://ext.same-assets.com/174619264/3776423224.webp", // Using a working image from our assets
       description: "ALS Ambulance means an ambulance in which Advanced Life Support (ALS) is provided in situations where the patient being transported is in a more critical condition and a paramedic is required to assist in the treatment of the patient before and/or during transport to the emergency facility.",
       responseTime: "30 minutes*",
       link: "/ambulance/als-ambulance"
@@ -62,7 +62,7 @@ export default function AmbulancePage() {
     {
       id: "nicu-ambulance",
       title: "NICU Ambulance Service",
-      image: "https://img.sasthyaseba.com/NgsDK0RCAzICFSpfVmcGCwhlWD0/ambulances/4/H6vwoIjcRdkbZ7qEyH73L7d87oDr13jp3YZSmOci/nicu-ambulance.webp",
+      image: "https://ext.same-assets.com/174619264/3776423224.webp", // Using a working image from our assets
       description: "We have advanced our ambulance into a neonatal incubator care unit for critically ill infants. Our neonatal ambulances are well equipped with ICU monitoring facilities, incubators, continuous oxygen administration, IV therapy etc. We give special attention to the hygiene of the van, to keep the baby free from infection.",
       responseTime: "30 minutes*",
       link: "/ambulance/nicu-ambulance"
@@ -70,7 +70,7 @@ export default function AmbulancePage() {
     {
       id: "non-ac-ambulance",
       title: "Non Ac Ambulance Service",
-      image: "https://img.sasthyaseba.com/LBUDK0RCAzICFSpfVmcGCwhlWD0/ambulances/2/mqLpNZgXoxpH8TNZhLyzAJkTP6dWbWPQt6Yu3Hzb/non-ac-ambulance.webp",
+      image: "https://ext.same-assets.com/174619264/3776423224.webp", // Using a working image from our assets
       description: "NON-AC ambulances are also called Basic Life Support Ambulances, which are primarily used for transporting patients who are medically stable and do not require constant monitoring. NON-AC BLS Ambulances are equipped with general equipment like oxygen, a stethoscope, and equipment to check blood pressure, etc.",
       responseTime: "30 minutes*",
       link: "/ambulance/non-ac-ambulance"

@@ -7,7 +7,6 @@ const nextConfig = {
       "images.unsplash.com",
       "ext.same-assets.com",
       "ugc.same-assets.com",
-      "img.sasthyaseba.com", // Added new domain
     ],
     remotePatterns: [
       {
@@ -28,11 +27,6 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "ugc.same-assets.com",
-        pathname: "/**",
-      },
-      {
-        protocol: "https",
-        hostname: "img.sasthyaseba.com", // Added new remote pattern
         pathname: "/**",
       },
     ],
