@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/Header";
@@ -21,8 +21,17 @@ import {
   Clock,
   Calendar,
   MessageSquare,
-  CalendarClock
+  CalendarClock,
+  ChevronDown
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Sample doctors data
 const doctorsData = [
@@ -129,18 +138,28 @@ const hospitalsData = [
 ];
 
 export default function SearchPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [searchType, setSearchType] = useState("doctor");
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchLocation, setSearchLocation] = useState("");
   const [searchMethod, setSearchMethod] = useState("");
   const [filteredDoctors, setFilteredDoctors] = useState(doctorsData);
   const [filteredHospitals, setFilteredHospitals] = useState(hospitalsData);
+  const [selectedGender, setSelectedGender] = useState("");
+  const [selectedSpecialty, setSelectedSpecialty] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedDistance, setSelectedDistance] = useState("");
+  const [selectedFaceToFace, setSelectedFaceToFace] = useState("");
 
   useEffect(() => {
     // Get query params
     const type = searchParams.get("type") || "doctor";
-    const query = searchParams.get("q") || "";
     const method = searchParams.get("method") || "";
+    
+    // Handle both query parameter formats (q and query)
+    const query = searchParams.get("query") || searchParams.get("q") || "";
 
     setSearchType(type);
     setSearchQuery(query);
@@ -163,6 +182,27 @@ export default function SearchPage() {
     }
   }, [searchParams]);
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Construct the search URL with the current parameters
+    let url = `/search?type=${searchType}`;
+    
+    if (searchQuery.trim()) {
+      url += `&query=${encodeURIComponent(searchQuery.trim())}`;
+    }
+    
+    if (searchLocation.trim()) {
+      url += `&location=${encodeURIComponent(searchLocation.trim())}`;
+    }
+    
+    if (searchMethod) {
+      url += `&method=${searchMethod}`;
+    }
+    
+    router.push(url);
+  };
+
   return (
     <main>
       <Header />
@@ -170,35 +210,114 @@ export default function SearchPage() {
       {/* Search Header */}
       <section className="bg-gradient-to-r from-primary to-primary/90 text-white py-10">
         <div className="container-custom">
-          <h1 className="text-2xl md:text-3xl font-bold mb-6">
-            {searchType === "doctor"
-              ? "Find the best doctors in Bangladesh"
-              : "Find the best hospitals in Bangladesh"}
-          </h1>
+          <div className="bg-white rounded-lg p-4 text-gray-900">
+            <div className="flex flex-col space-y-4">
+              {/* Top search row */}
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="md:w-1/4">
+                  <Select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Doctor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="doctor">Doctor</SelectItem>
+                        <SelectItem value="hospital">Hospital</SelectItem>
+                        <SelectItem value="clinic">Clinic</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="relative flex-grow">
+                  <Input
+                    type="text"
+                    placeholder="Search doctors..."
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                </div>
+                <div className="md:w-1/5">
+                  <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">
+                    Search
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Filter dropdowns */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                <Select value={selectedGender} onValueChange={setSelectedGender}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
 
-          <div className="bg-white rounded-lg p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-grow">
-                <Input
-                  type="text"
-                  placeholder={`Search for ${searchType === "doctor" ? "doctors or specialties" : "hospitals"}`}
-                  className="pl-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Specialities" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cardiologist">Cardiologist</SelectItem>
+                    <SelectItem value="dermatologist">Dermatologist</SelectItem>
+                    <SelectItem value="neurologist">Neurologist</SelectItem>
+                    <SelectItem value="orthopedic">Orthopedic</SelectItem>
+                    <SelectItem value="pediatrician">Pediatrician</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Countries" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bangladesh">Bangladesh</SelectItem>
+                    <SelectItem value="india">India</SelectItem>
+                    <SelectItem value="pakistan">Pakistan</SelectItem>
+                    <SelectItem value="malaysia">Malaysia</SelectItem>
+                    <SelectItem value="singapore">Singapore</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedCity} onValueChange={setSelectedCity}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Cities" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dhaka">Dhaka</SelectItem>
+                    <SelectItem value="chittagong">Chittagong</SelectItem>
+                    <SelectItem value="sylhet">Sylhet</SelectItem>
+                    <SelectItem value="rajshahi">Rajshahi</SelectItem>
+                    <SelectItem value="kualaLumpur">Kuala Lumpur</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedDistance} onValueChange={setSelectedDistance}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Distance" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5km">Within 5 km</SelectItem>
+                    <SelectItem value="10km">Within 10 km</SelectItem>
+                    <SelectItem value="20km">Within 20 km</SelectItem>
+                    <SelectItem value="50km">Within 50 km</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedFaceToFace} onValueChange={setSelectedFaceToFace}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Face To Face" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="relative flex-grow">
-                <Input
-                  type="text"
-                  placeholder="Location"
-                  className="pl-10"
-                />
-                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              </div>
-              <Button className="bg-secondary text-primary hover:bg-secondary/90">
-                Search
-              </Button>
             </div>
           </div>
         </div>

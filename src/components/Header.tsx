@@ -1,45 +1,71 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Menu, Search, X } from "lucide-react";
+import { Menu, Search, X, LogOut, User } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Header() {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const [headerSearchQuery, setHeaderSearchQuery] = useState("");
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Failed to logout", error);
+    }
+  };
+
+  const handleHeaderSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (headerSearchQuery.trim()) {
+      router.push(`/search?query=${encodeURIComponent(headerSearchQuery.trim())}`);
+    }
+  };
+
+  const handleMobileSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (mobileSearchQuery.trim()) {
+      router.push(`/search?query=${encodeURIComponent(mobileSearchQuery.trim())}`);
+      setIsMobileMenuOpen(false);
+    }
+  };
+
+  // Get user's initials for avatar fallback
+  const getUserInitials = () => {
+    if (!user || !user.displayName) return "U";
+    
+    const nameParts = user.displayName.split(' ');
+    if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+    
+    return `${nameParts[0].charAt(0)}${nameParts[nameParts.length - 1].charAt(0)}`.toUpperCase();
+  };
+
   return (
     <header className="w-full bg-white border-b">
       {/* Top bar */}
-      <div className="hidden lg:block border-b">
-        <div className="container-custom py-2 flex justify-between items-center">
-          <div className="flex gap-4">
-            <Link href="/health-checkup-and-insurances" className="text-sm font-medium text-gray-600 hover:text-secondary transition-colors">
-              Health Checkup & Insurance
-            </Link>
-            <Link href="/domiciliary-services" className="text-sm font-medium text-gray-600 hover:text-secondary transition-colors">
-              Domiciliary Services
-            </Link>
-            <Link href="/diagnostic-home-services" className="text-sm font-medium text-gray-600 hover:text-secondary transition-colors">
-              Diagnostic Home Services
-            </Link>
-          </div>
-          <div className="flex gap-4">
-            <Link href="https://sasthyaseba.app" className="text-sm font-medium text-gray-600 hover:text-secondary transition-colors">
-              Get the app
-            </Link>
-            <Link href="/contact" className="text-sm font-medium text-gray-600 hover:text-secondary transition-colors">
-              Support
-            </Link>
-          </div>
-        </div>
-      </div>
+
 
       {/* Main navigation */}
       <div className="container-custom py-3">
@@ -66,26 +92,61 @@ export function Header() {
             <Link href="/search?type=hospital" className="text-primary hover:text-secondary font-medium">
               Find Hospital
             </Link>
-            <Link href="/ambulance" className="text-primary hover:text-secondary font-medium">
-              Find Ambulance
-            </Link>
+
           </div>
 
-          {/* Search (shown on desktop) */}
+          {/* Search and Account (shown on desktop) */}
           <div className="hidden lg:flex items-center gap-4">
-            <div className="relative">
+            <form onSubmit={handleHeaderSearch} className="relative">
               <Input
                 type="text"
                 placeholder="Search doctors, hospitals, services..."
                 className="w-64 pr-8"
+                value={headerSearchQuery}
+                onChange={(e) => setHeaderSearchQuery(e.target.value)}
               />
-              <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            </div>
-            <Link href="/login">
-              <Button variant="outline" className="border-secondary text-primary hover:text-secondary">
-                Login/Register
-              </Button>
-            </Link>
+              <button 
+                type="submit" 
+                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-primary transition-colors"
+              >
+                <Search className="h-4 w-4" />
+              </button>
+            </form>
+            
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="p-0 h-10 w-10 rounded-full">
+                    <Avatar>
+                      {user.photoURL && (
+                        <AvatarImage src={user.photoURL} alt={user.displayName || 'User'} />
+                      )}
+                      <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>{user.displayName || user.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <Link href="/profile">
+                    <DropdownMenuItem>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                  </Link>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link href="/login">
+                <Button variant="outline" className="border-secondary text-primary hover:text-secondary">
+                  Login/Sign up
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -129,22 +190,52 @@ export function Header() {
             >
               Find Ambulance
             </Link>
-            <Link
-              href="/login"
-              className="text-primary hover:text-secondary py-2 border-b"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Login/Register
-            </Link>
+            
+            {user ? (
+              <>
+                <Link
+                  href="/profile"
+                  className="text-primary hover:text-secondary py-2 border-b"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  My Profile
+                </Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="text-left text-primary hover:text-secondary py-2 border-b"
+                >
+                  Log out
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="text-primary hover:text-secondary py-2 border-b"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Login/Sign up
+              </Link>
+            )}
+            
             <div className="pt-2">
-              <div className="relative">
+              <form onSubmit={handleMobileSearch} className="relative">
                 <Input
                   type="text"
                   placeholder="Search doctors, hospitals, services..."
                   className="w-full pr-8"
+                  value={mobileSearchQuery}
+                  onChange={(e) => setMobileSearchQuery(e.target.value)}
                 />
-                <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              </div>
+                <button 
+                  type="submit" 
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-primary transition-colors"
+                >
+                  <Search className="h-4 w-4" />
+                </button>
+              </form>
             </div>
             {/* Secondary links */}
             <div className="pt-4 flex flex-col space-y-2">
