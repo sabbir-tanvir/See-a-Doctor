@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 // Define the Specialty type
 type Specialty = {
@@ -281,8 +282,6 @@ export default function AllSpecialistsPage() {
     <main>
       <Header />
 
-
-
       {/* All Specialties Section */}
       <section className="py-16 bg-gray-50">
         <div className="container-custom">
@@ -312,6 +311,7 @@ export default function AllSpecialistsPage() {
       </section>
 
       <Footer />
+      <ScrollToTop />
     </main>
   );
 }

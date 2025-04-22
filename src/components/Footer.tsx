@@ -9,30 +9,10 @@ export function Footer() {
   return (
     <footer className="bg-primary text-white">
       <div className="container-custom pt-12 pb-8">
-        {/* Newsletter Section */}
-        <div className="mb-10 pb-8 border-b border-gray-700">
-          <div className="max-w-xl mx-auto text-center">
-            <h3 className="text-xl font-bold mb-4">Subscribe to Our Newsletter</h3>
-            <p className="mb-4 text-gray-200">Stay updated with our latest health tips and services</p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <div className="relative flex-grow">
-                <Mail size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input 
-                  type="email" 
-                  placeholder="Your email address" 
-                  className="w-full py-3 px-10 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-secondary text-white placeholder-gray-300"
-                />
-              </div>
-              <button className="bg-secondary hover:bg-secondary/90 text-white font-medium py-3 px-6 rounded-lg transition-colors">
-                Subscribe
-              </button>
-            </div>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-          {/* Company Section */}
-          <div className="space-y-6">
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
+          {/* Company Section - First column, full height */}
+          <div className="space-y-6 lg:row-span-2">
             <Link href="/" className="inline-block">
               <div className="relative h-12 w-36">
                 <Image
@@ -84,9 +64,10 @@ export function Footer() {
             </div>
           </div>
 
+          {/* Top Row: 3 link sections */}
           {/* Sasthya Seba Ltd Section */}
-          <div className="md:pl-6">
-            <h3 className="text-lg font-semibold mb-5 flex items-center border-b border-secondary pb-2">
+          <div className="md:pl-6 lg:col-start-2">
+            <h3 className="text-lg text-white font-semibold mb-5 flex items-center border-b border-secondary pb-2">
               <Image
                 src="https://ext.same-assets.com/690263052/1684320437.svg"
                 alt=""
@@ -113,7 +94,7 @@ export function Footer() {
 
           {/* For Patients Section */}
           <div>
-            <h3 className="text-lg font-semibold mb-5 flex items-center border-b border-secondary pb-2">
+            <h3 className="text-lg text-white font-semibold mb-5 flex items-center border-b border-secondary pb-2">
               <Image
                 src="https://ext.same-assets.com/690263052/2230474228.svg"
                 alt=""
@@ -171,7 +152,7 @@ export function Footer() {
 
           {/* For Doctors/Organisations Section */}
           <div>
-            <h3 className="text-lg font-semibold mb-5 flex items-center border-b border-secondary pb-2">
+            <h3 className="text-lg text-white font-semibold mb-5 flex items-center border-b border-secondary pb-2">
               <Image
                 src="https://ext.same-assets.com/690263052/697087813.svg"
                 alt=""
@@ -219,6 +200,26 @@ export function Footer() {
                 </Link>
               </li>
             </ul>
+          </div>
+          
+          {/* Newsletter Section - Spanning columns 2-4 in second row */}
+          <div className="lg:col-span-3 lg:col-start-2  rounded-lg lg:mt-0">
+            <div className="max-w-2xl mx-auto text-center">
+              <p className="mb-4 text-gray-200">Stay updated with our latest health tips and services</p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-grow">
+                  <Mail size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input 
+                    type="email" 
+                    placeholder="Your email address" 
+                    className="w-full py-3 px-10 rounded-lg bg-white/10 border border-white/20 focus:outline-none focus:ring-2 focus:ring-secondary text-white placeholder-gray-300"
+                  />
+                </div>
+                <button className="bg-secondary hover:bg-secondary/90 text-white font-medium py-3 px-6 rounded-lg transition-colors">
+                  Subscribe
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
