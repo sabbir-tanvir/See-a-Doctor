@@ -33,109 +33,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Sample doctors data
-const doctorsData = [
-  {
-    id: 1,
-    name: "Dr. Anika Rahman",
-    specialization: "Gynecologist & Obstetrician",
-    education: "MBBS, FCPS (Gynecology & Obstetrics)",
-    experience: "12 years",
-    hospital: "Popular Medical College Hospital",
-    location: "Dhanmondi, Dhaka",
-    rating: 4.8,
-    reviews: 124,
-    fee: 1200,
-    available: true,
-    image: "https://ext.same-assets.com/174619264/3871928465.webp"
-  },
-  {
-    id: 2,
-    name: "Dr. Mahmudul Hassan",
-    specialization: "Medicine Specialist",
-    education: "MBBS, MD (Medicine)",
-    experience: "15 years",
-    hospital: "Square Hospital",
-    location: "Panthapath, Dhaka",
-    rating: 4.9,
-    reviews: 210,
-    fee: 1500,
-    available: true,
-    image: "https://ext.same-assets.com/174619264/1294756382.webp"
-  },
-  {
-    id: 3,
-    name: "Dr. Sharif Ahmed",
-    specialization: "Cardiologist",
-    education: "MBBS, MD (Cardiology), FCPS",
-    experience: "18 years",
-    hospital: "Labaid Specialized Hospital",
-    location: "Dhanmondi, Dhaka",
-    rating: 4.7,
-    reviews: 189,
-    fee: 2000,
-    available: true,
-    image: "https://ext.same-assets.com/174619264/2743819564.webp"
-  },
-  {
-    id: 4,
-    name: "Dr. Nasreen Akter",
-    specialization: "Pediatrician",
-    education: "MBBS, FCPS (Pediatrics)",
-    experience: "10 years",
-    hospital: "United Hospital",
-    location: "Gulshan, Dhaka",
-    rating: 4.6,
-    reviews: 98,
-    fee: 1200,
-    available: true,
-    image: "https://ext.same-assets.com/174619264/3748619245.webp"
-  }
-];
-
-// Sample hospitals data
-const hospitalsData = [
-  {
-    id: 1,
-    name: "Square Hospital",
-    location: "Panthapath, Dhaka",
-    specialty: "Multi-specialty hospital",
-    beds: 350,
-    rating: 4.8,
-    reviews: 320,
-    image: "https://ext.same-assets.com/174619264/2749310568.webp"
-  },
-  {
-    id: 2,
-    name: "United Hospital",
-    location: "Gulshan, Dhaka",
-    specialty: "Multi-specialty hospital",
-    beds: 450,
-    rating: 4.7,
-    reviews: 290,
-    image: "https://ext.same-assets.com/174619264/1758392046.webp"
-  },
-  {
-    id: 3,
-    name: "Labaid Specialized Hospital",
-    location: "Dhanmondi, Dhaka",
-    specialty: "Multi-specialty hospital",
-    beds: 300,
-    rating: 4.6,
-    reviews: 260,
-    image: "https://ext.same-assets.com/174619264/3976203418.webp"
-  },
-  {
-    id: 4,
-    name: "Popular Medical College Hospital",
-    location: "Dhanmondi, Dhaka",
-    specialty: "Multi-specialty hospital",
-    beds: 250,
-    rating: 4.5,
-    reviews: 230,
-    image: "https://ext.same-assets.com/174619264/1293475806.webp"
-  }
-];
+// Import data from the data folder
+import { doctorsData, Doctor } from "@/data/doctorsData";
+import { hospitalsData, Hospital } from "@/data/hospitalsData";
 
 export default function SearchPage() {
   const router = useRouter();
@@ -144,8 +44,8 @@ export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchLocation, setSearchLocation] = useState("");
   const [searchMethod, setSearchMethod] = useState("");
-  const [filteredDoctors, setFilteredDoctors] = useState(doctorsData);
-  const [filteredHospitals, setFilteredHospitals] = useState(hospitalsData);
+  const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>(doctorsData);
+  const [filteredHospitals, setFilteredHospitals] = useState<Hospital[]>(hospitalsData);
   const [selectedGender, setSelectedGender] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -239,7 +139,11 @@ export default function SearchPage() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 </div>
                 <div className="md:w-1/5">
-                  <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600 text-white">
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+                    onClick={handleSearch}
+                  >
                     Search
                   </Button>
                 </div>
