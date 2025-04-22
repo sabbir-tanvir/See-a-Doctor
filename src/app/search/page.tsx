@@ -320,10 +320,12 @@ export default function SearchPage() {
                         </div>
 
                         <div className="md:w-1/5 bg-gray-50 p-4 flex flex-col gap-3 border-l border-gray-100 justify-center">
-                          <Button className="w-full flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
-                            Book Appointment
-                          </Button>
+                          <Link href={`/doctor/${doctor.id}/appointment`} className="w-full">
+                            <Button className="w-full flex items-center gap-2">
+                              <Calendar className="h-4 w-4" />
+                              Book Appointment
+                            </Button>
+                          </Link>
                           <Button variant="outline" className="w-full flex items-center gap-2">
                             <MessageSquare className="h-4 w-4" />
                             Video Consultation
