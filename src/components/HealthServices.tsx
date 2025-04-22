@@ -8,25 +8,25 @@ export function HealthServices() {
     {
       title: "Physiotherapy Service at Home",
       description: "Are you suffering from pain? The Solution is physiotherapy, also referred to as physical therapy. Our physiotherapists are licensed medical professionals who employ physical techniques to aid patients in reducing pain and enhancing or regaining mobility.",
-      image: "https://ext.same-assets.com/174619264/2151548762.webp",
+      image: "https://img.freepik.com/free-photo/physiotherapist-giving-shoulder-exercise-female-patient_107420-65326.jpg",
       link: "/domiciliary-services"
     },
     {
       title: "Home Sample Collection for Lab Test",
       description: "Home Sample Collection is a service offered by Sasthya Seba that brings diagnostic assistance right to the patients home. Our goal is to provide high-quality special healthcare services to patients who are unable to visit the hospital to provide blood, urine, or stool samples.",
-      image: "https://ext.same-assets.com/174619264/3758902147.webp",
+      image: "https://img.freepik.com/free-photo/nurse-taking-blood-sample-patient-analysis_23-2149131146.jpg",
       link: "/services"
     },
     {
       title: "Buy Health Checkup Package",
       description: "In our society, it is a tradition to see a doctor only when you feel unwell or sick. People still don't realize that some diseases that have plagued our bodies for years take time before their signs and symptoms appear physically. By regular health checkup, we can identify such potential risks early and prevent them.",
-      image: "https://ext.same-assets.com/174619264/1527983604.webp",
+      image: "https://img.freepik.com/free-photo/doctor-checking-patient-health-medical-examination_23-2149761374.jpg",
       link: "/health-checkup-and-insurances"
     },
     {
       title: "Buy Health Insurance",
       description: "During medical emergencies, a health insurance plan provides substantial financial support. The costs of crucial illnesses such as cancer, heart disease, and so on can have a significant impact on your financial situation. A health insurance plan can provide you with substantial financial coverage to cover the costs of treatment.",
-      image: "https://ext.same-assets.com/174619264/2748516903.webp",
+      image: "https://img.freepik.com/free-photo/health-insurance-claim-form-concept_53876-133703.jpg",
       link: "/health-checkup-and-insurances"
     }
   ];

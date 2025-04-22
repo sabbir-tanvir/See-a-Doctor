@@ -63,7 +63,7 @@ export function Header() {
   };
 
   return (
-    <header className="w-full bg-white border-b">
+    <header className="w-full bg-white border-b sticky top-0 z-50">
       {/* Top bar */}
 
 
@@ -97,7 +97,7 @@ export function Header() {
 
           {/* Search and Account (shown on desktop) */}
           <div className="hidden lg:flex items-center gap-4">
-            <form onSubmit={handleHeaderSearch} className="relative">
+            {/* <form onSubmit={handleHeaderSearch} className="relative">
               <Input
                 type="text"
                 placeholder="Search doctors, hospitals, services..."
@@ -111,7 +111,7 @@ export function Header() {
               >
                 <Search className="h-4 w-4" />
               </button>
-            </form>
+            </form> */}
             
             {user ? (
               <DropdownMenu>
@@ -183,13 +183,7 @@ export function Header() {
             >
               Find Hospital
             </Link>
-            <Link
-              href="/ambulance"
-              className="text-primary hover:text-secondary py-2 border-b"
-              onClick={() => setIsMobileMenuOpen(false)}
-            >
-              Find Ambulance
-            </Link>
+
             
             {user ? (
               <>
@@ -220,7 +214,7 @@ export function Header() {
               </Link>
             )}
             
-            <div className="pt-2">
+            {/* <div className="pt-2">
               <form onSubmit={handleMobileSearch} className="relative">
                 <Input
                   type="text"
@@ -236,45 +230,9 @@ export function Header() {
                   <Search className="h-4 w-4" />
                 </button>
               </form>
-            </div>
+            </div> */}
             {/* Secondary links */}
-            <div className="pt-4 flex flex-col space-y-2">
-              <Link
-                href="/health-checkup-and-insurances"
-                className="text-sm text-gray-600 hover:text-secondary py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Health Checkup & Insurance
-              </Link>
-              <Link
-                href="/domiciliary-services"
-                className="text-sm text-gray-600 hover:text-secondary py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Domiciliary Services
-              </Link>
-              <Link
-                href="/diagnostic-home-services"
-                className="text-sm text-gray-600 hover:text-secondary py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Diagnostic Home Services
-              </Link>
-              <Link
-                href="https://sasthyaseba.app"
-                className="text-sm text-gray-600 hover:text-secondary py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Get the app
-              </Link>
-              <Link
-                href="/contact"
-                className="text-sm text-gray-600 hover:text-secondary py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Support
-              </Link>
-            </div>
+
           </div>
         </div>
       )}
