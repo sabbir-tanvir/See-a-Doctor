@@ -3,12 +3,11 @@ import { Footer } from "@/components/Footer";
 import { HeroSection } from "@/components/HeroSection";
 import { SpecializedDoctors } from "@/components/SpecializedDoctors";
 import { EmergencyCallout } from "@/components/EmergencyCallout";
-
 import { DiagnosticServices } from "@/components/DiagnosticServices";
 import { HealthSuggestion } from "@/components/HealthSuggestion";
 import { Testimonials } from "@/components/Testimonials";
-
 import { HealthServices } from "@/components/HealthServices";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 export default function Home() {
   return (
@@ -17,14 +16,12 @@ export default function Home() {
       <HeroSection />
       <SpecializedDoctors />
       <EmergencyCallout />
-
       <DiagnosticServices />
       <HealthSuggestion />
       <Testimonials />
-
       <HealthServices />
-
       <Footer />
+      <ScrollToTop />
     </main>
   );
 }
