@@ -1,4 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SasthyaSeba - Healthcare Platform
+
+SasthyaSeba is a modern healthcare platform designed to connect patients with healthcare professionals seamlessly. This project aims to improve healthcare accessibility and efficiency through digital solutions.
+
+## Project Purpose
+
+SasthyaSeba was developed to address challenges in healthcare accessibility by providing:
+- Easy appointment scheduling with doctors
+- Digital medical records management
+- Telehealth consultation options
+- Healthcare information and resources
+
+## Features
+
+- User authentication and profiles
+- Doctor search and appointment booking
+- Medical record storage and sharing
+- Consultation scheduling
+- Healthcare blog and information resources
+- Responsive design for all devices
+
+## Screenshots
+
+### Home Page
+![Home Page](./screenshots/home-page.png)
+<!-- Add your screenshot images to a screenshots directory -->
+
+### Doctor Search
+![Doctor Search](./screenshots/doctor-search.png)
+
+### Patient Dashboard
+![Patient Dashboard](./screenshots/patient-dashboard.png)
+
+## Technologies Used
+
+- **Frontend**: Next.js, React, Tailwind CSS
+- **Backend**: Next.js API Routes
+- **Database**: [Your database choice]
+- **Authentication**: [Your auth solution]
+- **Deployment**: Vercel
+
+## How It's Made
+
+This application is built with Next.js using the App Router architecture. The development process involved:
+
+1. User interface design and prototyping
+2. Implementation of frontend components with React and Tailwind CSS
+3. Backend API development using Next.js API routes
+4. Database integration and state management
+5. Testing and optimization
+
+## How to Use
+
+1. **Registration/Login**:
+   - Create an account or log in to access all features
+
+2. **Finding a Doctor**:
+   - Browse through available doctors
+   - Filter by specialty, location, or availability
+   - View doctor profiles and credentials
+
+3. **Booking Appointments**:
+   - Select available time slots
+   - Provide reason for visit
+   - Receive confirmation
+
+4. **Managing Health Records**:
+   - Upload medical documents
+   - Share records with healthcare providers
+   - Track medical history
 
 ## Getting Started
 
@@ -34,3 +103,11 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Contributing
+
+[Instructions for how others can contribute to your project]
+
+## License
+
+[Your license information]
