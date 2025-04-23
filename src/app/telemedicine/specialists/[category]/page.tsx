@@ -242,23 +242,23 @@ const specialtyInfo: Record<string, { title: string, description: string, altern
 const getDoctorsByCategory = (category: string): Doctor[] => {
   // Get the specialty info for this category
   const specialtyData = specialtyInfo[category];
-  
+
   if (!specialtyData) {
     return [];
   }
-  
+
   const mainTitle = specialtyData.title.toLowerCase();
   const alternativeTitles = specialtyData.alternativeNames?.map(name => name.toLowerCase()) || [];
-  
+
   // Filter doctors by specialization matching any of the possible titles
   return doctorsData.filter(doctor => {
     const docSpecialization = doctor.specialization.toLowerCase();
-    
+
     // Check if the doctor specialization matches the main title or any alternative names
     if (docSpecialization.includes(mainTitle)) {
       return true;
     }
-    
+
     // Check against alternative names
     return alternativeTitles.some(altTitle => docSpecialization.includes(altTitle));
   });
@@ -293,22 +293,26 @@ export default function SpecialistCategoryPage({
                   <div className="p-6 flex flex-col md:flex-row gap-4">
                     <div className="flex-shrink-0">
                       <div className="relative h-24 w-24 rounded-full overflow-hidden">
-                        {doctor.image ? (
-                          <Image
-                            src={doctor.image}
-                            alt={doctor.name}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="h-24 w-24 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-lg">
-                            {doctor.name.substring(0, 2)}
-                          </div>
-                        )}
+                        <Link href={`/doctor/${doctor.id}`}>
+                          {doctor.image ? (
+                            <Image
+                              src={doctor.image}
+                              alt={doctor.name}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="h-24 w-24 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-lg">
+                              {doctor.name.substring(0, 2)}
+                            </div>
+                          )}
+                        </Link>
                       </div>
                     </div>
                     <div className="flex-grow">
+                    <Link href={`/doctor/${doctor.id}`}>
                       <h3 className="font-bold text-lg text-primary">{doctor.name}</h3>
+                    </Link>
                       <p className="text-gray-600 mb-1">{doctor.specialization}</p>
                       <p className="text-gray-600 mb-1">{doctor.education}</p>
                       <p className="text-gray-600 mb-2">{doctor.experience} Experience</p>

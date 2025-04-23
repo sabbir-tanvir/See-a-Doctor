@@ -189,23 +189,27 @@ export default function DoctorAppointmentPage() {
                 <CardContent className="p-6">
                   <div className="flex flex-col items-center mb-5">
                     <div className="relative h-32 w-32 mb-3">
-                      {doctor.image ? (
-                        <Image
-                          src={doctor.image}
-                          alt={doctor.name}
-                          fill
-                          className="object-cover rounded-full border-4 border-gray-50 shadow-sm"
-                        />
-                      ) : (
-                        <Avatar className="h-32 w-32 border-4 border-gray-50 shadow-sm">
-                          <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                            {doctor.name.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
+                      <Link href={`/doctor/${doctor.id}`}>
+                        {doctor.image ? (
+                          <Image
+                            src={doctor.image}
+                            alt={doctor.name}
+                            fill
+                            className="object-cover rounded-full border-4 border-gray-50 shadow-sm hover:border-primary/50 transition-colors cursor-pointer"
+                          />
+                        ) : (
+                          <Avatar className="h-32 w-32 border-4 border-gray-50 shadow-sm hover:border-primary/50 transition-colors cursor-pointer">
+                            <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+                              {doctor.name.split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                      </Link>
                     </div>
                     
-                    <h2 className="text-lg font-bold text-primary text-center">{doctor.name}</h2>
+                    <Link href={`/doctor/${doctor.id}`} className="hover:text-primary/80 transition-colors">
+                      <h2 className="text-lg font-bold text-primary text-center">{doctor.name}</h2>
+                    </Link>
                     <p className="text-secondary font-medium text-center">{doctor.specialization}</p>
                     <div className="mt-1 flex items-center gap-1">
                       <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
@@ -279,6 +283,20 @@ export default function DoctorAppointmentPage() {
                       </div>
                     </div>
                   </div>
+                  
+                  <div className="mt-4 pt-3 border-t text-center">
+                    <Link 
+                      href={`/doctor/${doctor.id}`}
+                      className="text-primary hover:text-primary/80 font-medium flex items-center justify-center gap-2"
+                    >
+                      View Doctor Profile
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-external-link">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                      </svg>
+                    </Link>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -343,7 +361,18 @@ export default function DoctorAppointmentPage() {
                                 row: "flex w-full mt-1",
                                 cell: "h-8 w-8 text-center text-xs p-0 relative [&:has([aria-selected])]:bg-accent",
                                 day: "h-8 w-8 p-0 font-normal aria-selected:opacity-100",
-                                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                                day_selected: "!bg-primary !text-white hover:!bg-primary hover:!text-white focus:!bg-primary focus:!text-white font-medium rounded-md",
+                                day_disabled: "text-gray-300 opacity-50",
+                                day_today: "bg-accent text-accent-foreground",
+                                day_outside: "text-muted-foreground opacity-50",
+                                day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+                                day_hidden: "invisible",
+                              }}
+                              modifiers={{
+                                available: (date) => date >= new Date(),
+                              }}
+                              modifiersClassNames={{
+                                available: "bg-green-100 hover:bg-green-200",
                               }}
                             />
                           </div>
