@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/Header";
@@ -46,10 +46,14 @@ import {
 
 import { doctorsData, Doctor } from "@/data/doctorsData";
 import { format } from "date-fns";
+import { useAuth } from "@/lib/AuthContext"; // Import useAuth
+import { db } from "@/lib/firebase"; // Import Firestore database
 
 export default function DoctorAppointmentPage() {
   const params = useParams();
+  const router = useRouter();
   const doctorId = params.doctorId as string;
+  const { user, loading: authLoading } = useAuth(); // Use the AuthContext
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -63,6 +67,7 @@ export default function DoctorAppointmentPage() {
   const [patientGender, setPatientGender] = useState("");
   const [patientProblem, setPatientProblem] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [submitting, setSubmitting] = useState(false); // Add a submitting state
 
   // Mock time slots for scheduling
   const availableTimeSlots = [
@@ -72,6 +77,12 @@ export default function DoctorAppointmentPage() {
   ];
 
   useEffect(() => {
+    // Populate patient info from user data if available
+    if (user) {
+      if (user.displayName) setPatientName(user.displayName);
+      if (user.email) setPatientEmail(user.email || '');
+    }
+    
     console.log("Doctor ID from params:", doctorId);
     console.log("Available doctors:", doctorsData);
     
@@ -103,35 +114,146 @@ export default function DoctorAppointmentPage() {
     } finally {
       setLoading(false);
     }
-  }, [doctorId]);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log({
-      doctorId,
-      appointmentType,
-      date,
-      timeSlot,
-      patientName,
-      patientPhone,
-      patientEmail,
-      patientAge,
-      patientGender,
-      patientProblem,
-      termsAccepted
-    });
     
-    toast.success("Appointment confirmed successfully!", {
-      description: `Your appointment with Dr. ${doctor?.name} on ${format(date, 'PPP')} at ${timeSlot} has been booked.`,
-      duration: 5000,
-      action: {
-        label: "View Appointments",
-        onClick: () => console.log("View appointments clicked")
-      },
-    });
+    // Check if there's a pending appointment in localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const pendingAppointment = localStorage.getItem('pendingAppointment');
+        if (pendingAppointment && user) {
+          const appointmentData = JSON.parse(pendingAppointment);
+          
+          // Only restore the pending appointment if it's for the same doctor
+          if (appointmentData.doctorId === doctorId) {
+            setAppointmentType(appointmentData.appointmentType || 'chamber');
+            if (appointmentData.date) setDate(new Date(appointmentData.date));
+            setTimeSlot(appointmentData.timeSlot || '');
+            setPatientName(appointmentData.patientName || user.displayName || '');
+            setPatientPhone(appointmentData.patientPhone || '');
+            setPatientEmail(appointmentData.patientEmail || user.email || '');
+            setPatientAge(appointmentData.patientAge || '');
+            setPatientGender(appointmentData.patientGender || '');
+            setPatientProblem(appointmentData.patientProblem || '');
+            
+            // Clear the pending appointment
+            localStorage.removeItem('pendingAppointment');
+            
+            toast.info("Your appointment information has been restored", {
+              duration: 3000,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error retrieving pending appointment:', error);
+      }
+    }
+  }, [doctorId, user]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Check if user is logged in before proceeding
+    if (!user) {
+      try {
+        // Store appointment details in localStorage to recover after login
+        localStorage.setItem('pendingAppointment', JSON.stringify({
+          doctorId,
+          appointmentType,
+          date: date ? date.toISOString() : null, // Make date serializable
+          timeSlot,
+          patientName,
+          patientPhone,
+          patientEmail,
+          patientAge,
+          patientGender,
+          patientProblem
+        }));
+      } catch (error) {
+        console.error('Error saving pending appointment:', error);
+      }
+      
+      toast.error("Please login to confirm your appointment", {
+        description: "You'll be redirected to the login page",
+        duration: 3000,
+      });
+      
+      // Redirect to login page after a short delay
+      setTimeout(() => {
+        router.push('/login?redirect=' + encodeURIComponent(`/doctor/${doctorId}/appointment`));
+      }, 1500);
+      
+      return;
+    }
+    
+    // If user is logged in, proceed with appointment booking
+    try {
+      setSubmitting(true);
+      
+      // Format date for API
+      const appointmentDate = date ? format(date, 'yyyy-MM-dd') : '';
+      
+      // Create appointment object
+      const appointmentData = {
+        doctorId,
+        doctorName: doctor?.name,
+        doctorSpecialization: doctor?.specialization,
+        appointmentType,
+        appointmentDate,
+        timeSlot,
+        patientName,
+        patientPhone,
+        patientEmail,
+        patientAge,
+        patientGender,
+        patientProblem,
+        status: 'pending', // pending, confirmed, completed, cancelled
+        userId: user.uid,
+        userEmail: user.email
+      };
+      
+      // Send appointment data to our API endpoint
+      const response = await fetch('/api/appointments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(appointmentData),
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to book appointment');
+      }
+      
+      // Success notification
+      toast.success("Appointment confirmed successfully!", {
+        description: `Your appointment with Dr. ${doctor?.name} on ${format(date, 'PPP')} at ${timeSlot} has been booked.`,
+        duration: 5000,
+        action: {
+          label: "View Appointments",
+          onClick: () => router.push('/profile') // Redirect to profile or appointments page
+        },
+      });
+      
+      // Clear form fields
+      setDate(undefined);
+      setTimeSlot("");
+      setPatientProblem("");
+      setTermsAccepted(false);
+      
+    } catch (error) {
+      console.error("Error booking appointment:", error);
+      toast.error("Failed to book appointment", {
+        description: "Please try again later",
+        duration: 5000,
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  if (loading) {
+  // Show combined loading state
+  if (loading || authLoading) {
     return (
       <main>
         <Header />
@@ -167,6 +289,7 @@ export default function DoctorAppointmentPage() {
       <Toaster position="top-right" richColors />
       <Header />
 
+      {/* Rest of the component remains the same */}
       <section className="bg-gray-50 py-4 border-b">
         <div className="container-custom">
           <div className="flex text-sm">
@@ -184,9 +307,11 @@ export default function DoctorAppointmentPage() {
       <section className="py-6">
         <div className="container-custom">
           <div className="flex flex-col md:flex-row gap-6">
+            {/* Doctor info card - left column */}
             <div className="md:w-1/4">
               <Card className="border-t-4 border-t-primary">
                 <CardContent className="p-6">
+                  {/* Doctor card content */}
                   <div className="flex flex-col items-center mb-5">
                     <div className="relative h-32 w-32 mb-3">
                       <Link href={`/doctor/${doctor.id}`}>
@@ -207,6 +332,7 @@ export default function DoctorAppointmentPage() {
                       </Link>
                     </div>
                     
+                    {/* Doctor details */}
                     <Link href={`/doctor/${doctor.id}`} className="hover:text-primary/80 transition-colors">
                       <h2 className="text-lg font-bold text-primary text-center">{doctor.name}</h2>
                     </Link>
@@ -218,6 +344,7 @@ export default function DoctorAppointmentPage() {
                     </div>
                   </div>
                   
+                  {/* Doctor information sections */}
                   <div className="space-y-4">
                     <div className="pt-3 border-t">
                       <h3 className="font-medium text-gray-900 mb-2">Doctor Information</h3>
@@ -301,6 +428,7 @@ export default function DoctorAppointmentPage() {
               </Card>
             </div>
             
+            {/* Appointment booking form - right column */}
             <div className="md:w-3/4">
               <Card>
                 <CardHeader>
@@ -310,6 +438,20 @@ export default function DoctorAppointmentPage() {
                 
                 <CardContent>
                   <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Show login message if not authenticated */}
+                    {!user && (
+                      <div className="bg-amber-50 border border-amber-200 px-4 py-3 rounded flex items-center space-x-3 mb-2">
+                        <div className="text-amber-600">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
+                        <div>
+                          <div className="font-medium text-amber-800">Login Required</div>
+                          <p className="text-amber-700 text-sm">Please <Link href="/login" className="underline font-medium">login</Link> to book an appointment. Your appointment details will be saved.</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Appointment type selection */}
                     <div className="space-y-4">
                       <h3 className="font-medium">Select Appointment Type</h3>
                       <Tabs defaultValue="chamber" className="w-full" onValueChange={setAppointmentType}>
@@ -330,6 +472,7 @@ export default function DoctorAppointmentPage() {
                       </Tabs>
                     </div>
                     
+                    {/* Date and time selection */}
                     <div className="space-y-5 border rounded-lg p-4 bg-gray-50">
                       <div className="flex items-center justify-between">
                         <h3 className="font-medium text-lg">Select Date & Time</h3>
@@ -494,7 +637,7 @@ export default function DoctorAppointmentPage() {
                       </div>
                     </div>
                     
-                    {/* Terms and Conditions - Fixed clickable version */}
+                    {/* Terms and Conditions */}
                     <div className="space-y-4 border-t pt-4">
                       <div className="flex items-start space-x-2">
                         <div className="flex h-5 items-center">
@@ -524,10 +667,22 @@ export default function DoctorAppointmentPage() {
                       type="submit" 
                       size="lg" 
                       className="w-full bg-primary hover:bg-primary/90 text-white"
-                      disabled={!date || !timeSlot || !termsAccepted}
+                      disabled={!date || !timeSlot || !termsAccepted || submitting}
                     >
-                      Confirm Appointment
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                      {submitting ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          Confirm Appointment
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
                     </Button>
                   </form>
                 </CardContent>

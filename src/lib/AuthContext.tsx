@@ -40,23 +40,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   // Sign up new users
-  const signUp = (email: string, password: string) => {
-    return createUserWithEmailAndPassword(auth, email, password);
+  const signUp = async (email: string, password: string) => {
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    // Store user data in localStorage for persistence
+    if (result.user) {
+      storeUserData(result.user);
+    }
+    return result;
   };
 
   // Sign in existing users
-  const signIn = (email: string, password: string) => {
-    return signInWithEmailAndPassword(auth, email, password);
+  const signIn = async (email: string, password: string) => {
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    // Store user data in localStorage for persistence
+    if (result.user) {
+      storeUserData(result.user);
+    }
+    return result;
   };
 
   // Sign in with Google
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    return signInWithPopup(auth, provider);
+    const result = await signInWithPopup(auth, provider);
+    // Store user data in localStorage for persistence
+    if (result.user) {
+      storeUserData(result.user);
+    }
+    return result;
   };
 
   // Sign out
-  const logout = () => {
+  const logout = async () => {
+    // Clear user data from localStorage
+    localStorage.removeItem('userData');
+    localStorage.removeItem('authToken');
     return signOut(auth);
   };
 
@@ -68,15 +86,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Update user profile
   const updateUserProfile = async (displayName: string, photoURL?: string) => {
     if (!auth.currentUser) return;
-    return updateProfile(auth.currentUser, {
+    
+    await updateProfile(auth.currentUser, {
       displayName,
       photoURL: photoURL || auth.currentUser.photoURL
     });
+    
+    // Update stored user data
+    if (auth.currentUser) {
+      storeUserData(auth.currentUser);
+    }
+    
+    return;
+  };
+
+  // Helper function to store user data in localStorage
+  const storeUserData = (user: User) => {
+    try {
+      // Create a serializable user object
+      const userData = {
+        uid: user.uid,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        // Add any other relevant user data here
+      };
+      
+      localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('authToken', 'firebase_auth_token'); // For backward compatibility
+    } catch (error) {
+      console.error('Error storing user data in localStorage:', error);
+    }
   };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
+      
+      if (user) {
+        storeUserData(user);
+      }
+      
       setLoading(false);
     });
 
@@ -99,4 +150,4 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       {!loading && children}
     </AuthContext.Provider>
   );
-}; 
+};
