@@ -527,8 +527,10 @@ export default function DoctorProfilePage() {
                 </CardHeader>
                 <CardContent className="space-y-4 p-3">
                   {doctorsData
+                    // Filter for doctors with the same specialization, excluding the current one
                     .filter(doc => doc.specialization === doctor.specialization && doc.id !== doctor.id)
-                    .slice(0, 3)
+                    // Limit the results to a maximum of 3
+                    .slice(0, 3) 
                     .map(similarDoctor => (
                       <Link href={`/doctor/${similarDoctor.id}`} key={similarDoctor.id}>
                         <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg">

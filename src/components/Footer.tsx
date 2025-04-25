@@ -30,10 +30,10 @@ export function Footer() {
             {/* Contact Information */}
             <div className="space-y-3 bg-white/5 p-4 rounded-lg">
               <h4 className="font-medium text-secondary">Contact Us</h4>
-              <Link href="tel:09611530530" className="block text-lg font-semibold hover:text-secondary transition-colors flex items-center gap-2">
+              <Link href="tel:09611530530" className=" text-lg font-semibold hover:text-secondary transition-colors flex items-center gap-2">
                 <span className="bg-secondary/20 p-1 rounded">09611 530 530</span>
               </Link>
-              <Link href="tel:01405600700" className="block text-lg font-semibold hover:text-secondary transition-colors flex items-center gap-2">
+              <Link href="tel:01405600700" className=" text-lg font-semibold hover:text-secondary transition-colors flex items-center gap-2">
                 <span className="bg-secondary/20 p-1 rounded">01405 600 700</span>
               </Link>
             </div>
@@ -57,9 +57,7 @@ export function Footer() {
                 <Link href="https://www.instagram.com/sasthyasebaltd/" className="bg-white/10 hover:bg-secondary p-2.5 rounded-full transition-all hover:scale-110" aria-label="Instagram">
                   <Instagram size={18} />
                 </Link>
-                <Link href="https://status.sasthyaseba.com" className="bg-white/10 hover:bg-secondary p-2.5 rounded-full transition-all hover:scale-110" aria-label="Status">
-                  <AlertCircle size={18} />
-                </Link>
+
               </div>
             </div>
           </div>
