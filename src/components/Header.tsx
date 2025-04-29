@@ -86,10 +86,10 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-6">
-            <Link href="/search?type=doctor" className="text-primary hover:text-secondary font-medium">
+            <Link href="/find-doctor" className="text-primary hover:text-secondary font-medium">
               Find Doctor
             </Link>
-            <Link href="/search?type=hospital" className="text-primary hover:text-secondary font-medium">
+            <Link href="/find-hospital" className="text-primary hover:text-secondary font-medium">
               Find Hospital
             </Link>
 
@@ -170,14 +170,14 @@ export function Header() {
         <div className="lg:hidden bg-white border-t">
           <div className="container-custom py-4 flex flex-col space-y-4">
             <Link
-              href="/search?type=doctor"
+              href="/find-doctor"
               className="text-primary hover:text-secondary py-2 border-b"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Find Doctor
             </Link>
             <Link
-              href="/search?type=hospital"
+              href="/find-hospital"
               className="text-primary hover:text-secondary py-2 border-b"
               onClick={() => setIsMobileMenuOpen(false)}
             >
