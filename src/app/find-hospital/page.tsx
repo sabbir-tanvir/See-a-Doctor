@@ -243,10 +243,12 @@ export default function FindHospitalPage() {
                           </div>
 
                           <div className="md:w-1/4 bg-gray-50 p-6 flex flex-col gap-3 border-l border-gray-100 justify-center">
-                            <Button className="w-full flex items-center gap-2">
-                              <CalendarClock className="h-4 w-4" />
-                              Find Doctors
-                            </Button>
+                            <Link href={`/find-doctor?hospital=${encodeURIComponent(hospital.name)}`} className="w-full">
+                              <Button className="w-full flex items-center gap-2">
+                                <CalendarClock className="h-4 w-4" />
+                                Find Doctors
+                              </Button>
+                            </Link>
                             <Link href={`/hospital/${hospital.id}`} className="text-primary hover:text-secondary text-sm text-center">
                               View Hospital
                             </Link>

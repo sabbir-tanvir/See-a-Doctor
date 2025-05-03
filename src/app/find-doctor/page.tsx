@@ -36,13 +36,21 @@ export default function FindDoctorPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("query") || "");
-  const [searchLocation, setSearchLocation] = useState("");
   const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedGender, setSelectedGender] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedFaceToFace, setSelectedFaceToFace] = useState("");
+  const [selectedHospital, setSelectedHospital] = useState(searchParams.get("hospital") || "");
+
+  // If a hospital was provided in the URL, automatically perform a search
+  React.useEffect(() => {
+    if (searchParams.get("hospital")) {
+      setSelectedHospital(searchParams.get("hospital") || "");
+      handleSearch(new Event("submit") as React.FormEvent);
+    }
+  }, [searchParams]);
 
   // Handle search form submission
   const handleSearch = (e: React.FormEvent) => {
@@ -61,9 +69,8 @@ export default function FindDoctorPage() {
     
     // Filter by gender
     if (selectedGender) {
-      // This would require gender field in your data, assuming it's available
+      // Simple heuristic for gender based on "Dr." prefix in name
       filtered = filtered.filter(doc => {
-        // Simple heuristic for gender based on "Dr." prefix in name
         if (selectedGender === "male" && !doc.name.includes("Dr. Ms.") && !doc.name.includes("Dr. Mrs.")) {
           return true;
         }
@@ -88,12 +95,20 @@ export default function FindDoctorPage() {
       );
     }
     
+    // Filter by hospital
+    if (selectedHospital) {
+      filtered = filtered.filter(doc =>
+        doc.hospital.toLowerCase() === selectedHospital.toLowerCase()
+      );
+    }
+    
     // Update URL with search parameters for sharing/bookmarking
     let url = `/find-doctor?query=${encodeURIComponent(searchQuery.trim())}`;
     if (selectedGender) url += `&gender=${selectedGender}`;
     if (selectedSpecialty) url += `&specialty=${encodeURIComponent(selectedSpecialty)}`;
     if (selectedCity) url += `&city=${encodeURIComponent(selectedCity)}`;
     if (selectedFaceToFace) url += `&faceToFace=${selectedFaceToFace}`;
+    if (selectedHospital) url += `&hospital=${encodeURIComponent(selectedHospital)}`;
     
     router.push(url, { scroll: false });
     
@@ -181,6 +196,18 @@ export default function FindDoctorPage() {
                   <SelectContent>
                     <SelectItem value="yes">Yes</SelectItem>
                     <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={selectedHospital} onValueChange={setSelectedHospital}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Hospital" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="hospital1">Hospital 1</SelectItem>
+                    <SelectItem value="hospital2">Hospital 2</SelectItem>
+                    <SelectItem value="hospital3">Hospital 3</SelectItem>
+                    <SelectItem value="hospital4">Hospital 4</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

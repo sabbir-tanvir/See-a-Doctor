@@ -69,16 +69,16 @@ export function Header() {
 
       {/* Main navigation */}
       <div className="container-custom py-3">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between  items-center">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
-            <div className="relative h-10 w-32">
+          <Link href="/" className="flex rounded-sm items-center">
+            <div className="relative rounded-full h-10 w-10">
               {/* Replace with actual logo or use a placeholder */}
               <Image
                 src="https://ext.same-assets.com/174619264/3871148761.webp"
                 alt="Sasthya Seba"
                 fill
-                className="object-contain"
+                className="object-cover rounded-full"
                 priority
               />
             </div>
