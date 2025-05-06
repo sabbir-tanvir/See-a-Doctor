@@ -10,55 +10,55 @@ export function Testimonials() {
   const testimonials = [
     {
       id: 1,
-      name: "Faiyaz A. Chowdhury",
+      name: "John Smith",
       position: "Software Engineer",
       text: "Very helpful. Far easier than doing same things on computer. Allows quick and easy search with speedy booking. Even maintains history of doctors visited.",
-      initials: "FC",
+      initials: "JS",
       rating: 5,
       image: "/testimonials/person1.jpg"
     },
     {
       id: 2,
-      name: "Israt Mou",
+      name: "Sarah Johnson",
       position: "Teacher",
       text: "Dear Fatema, Thank you so much for your diligent follow up and especially for calling me back. It is very rare that someone from customer support for any company ever reverts. Reaffirms my faith in Sasthya Seba",
-      initials: "IM",
+      initials: "SJ",
       rating: 5, 
       image: "/testimonials/person2.jpg"
     },
     {
       id: 3,
-      name: "Labby Ahsan",
+      name: "Michael Brown",
       position: "Business Owner",
       text: "The service of Sasthya Seba is praiseworthy. When my grandmother was at critical moment, we were all worried to have a vehicle in that late night.",
-      initials: "LA",
+      initials: "MB",
       rating: 4,
       image: "/testimonials/person3.jpg"
     },
     {
       id: 4,
-      name: "Mashrur Enan",
+      name: "Emily Davis",
       position: "Marketing Executive",
       text: "Very easy to book, maintain history. Hassle free from older versions of booking appointments via telephone.. Thanks Sasthya Seba for making it simple.",
-      initials: "ME",
+      initials: "ED",
       rating: 5,
       image: "/testimonials/person4.jpg"
     },
     {
       id: 5,
-      name: "Md Saiful Islam",
+      name: "David Wilson",
       position: "Banker",
       text: "Very easy & Hassle free to make an appointment and maintain history. Even if you are out of the Internet",
-      initials: "MSI",
+      initials: "DW",
       rating: 4,
       image: "/testimonials/person5.jpg"
     },
     {
       id: 6,
-      name: "Ruksana Sharmin",
+      name: "Jennifer Lee",
       position: "Student",
       text: "Really Appreciate your help on the issue and your quick and prompt resolution of the issue. Not only were you patient enough to listen and understand the problem but also provide a quick resolution for the same. Really appreciate it and Thank you once again for your help and support.",
-      initials: "RS",
+      initials: "JL",
       rating: 5,
       image: "/testimonials/person6.jpg"
     }

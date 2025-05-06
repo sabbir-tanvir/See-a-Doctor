@@ -8,32 +8,32 @@ export function DiagnosticServices() {
   const diagnosticServices = [
     {
       title: "CT Scan",
-      icon: "https://ext.same-assets.com/174619264/920285123.webp",
+      icon: "https://via.placeholder.com/64/007bff/ffffff?text=CT",
       link: "/diagnostics?category=CT%20Scan"
     },
     {
       title: "Blood Tests",
-      icon: "https://ext.same-assets.com/174619264/2048153456.webp",
+      icon: "https://via.placeholder.com/64/28a745/ffffff?text=Blood",
       link: "/diagnostics?category=Blood%20Tests"
     },
     {
       title: "Endoscopy",
-      icon: "https://ext.same-assets.com/174619264/3475869024.webp",
+      icon: "https://via.placeholder.com/64/ffc107/000000?text=Endo",
       link: "/diagnostics?category=Endoscopy"
     },
     {
       title: "Ultrasound",
-      icon: "https://ext.same-assets.com/174619264/2467159348.webp",
+      icon: "https://via.placeholder.com/64/17a2b8/ffffff?text=Ultra",
       link: "/diagnostics?category=Ultrasound"
     },
     {
       title: "X-Ray",
-      icon: "https://ext.same-assets.com/174619264/1452073649.webp",
+      icon: "https://via.placeholder.com/64/dc3545/ffffff?text=XRay",
       link: "/diagnostics?category=X-Ray"
     },
     {
       title: "Microbiology",
-      icon: "https://ext.same-assets.com/174619264/4028516973.webp",
+      icon: "https://via.placeholder.com/64/6f42c1/ffffff?text=Micro",
       link: "/diagnostics?category=Microbiology"
     }
   ];
@@ -50,9 +50,13 @@ export function DiagnosticServices() {
               Book tests with top labs, get sample pick up, share reports with doctors online
             </p>
           </div>
-          <Link href="/diagnostics" className="text-primary hover:text-secondary mt-4 md:mt-0 font-medium">
-            View all
-          </Link>
+          <div className="mt-4 md:mt-0">
+            <Link href="/diagnostics">
+              <Button variant="outline" className="font-medium">
+                Compare All Prices
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-6">

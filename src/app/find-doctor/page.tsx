@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -31,6 +31,7 @@ import {
 
 // Import data from the data folder
 import { doctorsData, Doctor } from "@/data/doctorsData";
+import { hospitalsData } from "@/data/hospitalsData";
 
 export default function FindDoctorPage() {
   const router = useRouter();
@@ -116,6 +117,17 @@ export default function FindDoctorPage() {
     setFilteredDoctors(filtered);
     setHasSearched(true);
   };
+
+  // Extract unique hospitals from doctors data for hospital select options
+  const uniqueHospitals = useMemo(() => {
+    const hospitalSet = new Set<string>();
+    doctorsData.forEach(doctor => {
+      if (doctor.hospital) {
+        hospitalSet.add(doctor.hospital);
+      }
+    });
+    return Array.from(hospitalSet).sort();
+  }, []);
 
   return (
     <main>
@@ -204,10 +216,15 @@ export default function FindDoctorPage() {
                     <SelectValue placeholder="Hospital" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="hospital1">Hospital 1</SelectItem>
-                    <SelectItem value="hospital2">Hospital 2</SelectItem>
-                    <SelectItem value="hospital3">Hospital 3</SelectItem>
-                    <SelectItem value="hospital4">Hospital 4</SelectItem>
+                    {uniqueHospitals.length > 0 ? (
+                      uniqueHospitals.map(hospital => (
+                        <SelectItem key={hospital} value={hospital}>
+                          {hospital}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem disabled>No hospitals found</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
