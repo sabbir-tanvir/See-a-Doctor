@@ -1,5 +1,4 @@
-﻿
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -163,7 +162,11 @@ export default function DiagnosticsPage() {
                   {hospital.diagnosticPrices?.[selectedService as keyof typeof hospital.diagnosticPrices]?.toLocaleString()}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.location.href = `/diagnostics/booking/${hospital.id}?service=${selectedService}`}
+                  >
                     Book Now
                   </Button>
                 </TableCell>
