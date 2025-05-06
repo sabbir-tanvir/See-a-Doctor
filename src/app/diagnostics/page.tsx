@@ -6,6 +6,8 @@ import Image from "next/image";
 import { hospitalsData } from "@/data/hospitalsData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import {
   Table,
   TableBody,
@@ -60,7 +62,12 @@ export default function DiagnosticsPage() {
     });
 
   return (
-    <div className="container mx-auto px-4 py-12">
+    <>
+    <div>
+    <Header />
+
+    <div className="container mx-auto px-10 py-12">
+
       <h1 className="text-3xl font-bold mb-8">
         Diagnostic Services Price Comparison
       </h1>
@@ -189,5 +196,9 @@ export default function DiagnosticsPage() {
         </ul>
       </div>
     </div>
+
+    <Footer />
+    </div>
+    </>
   );
 }

@@ -15,6 +15,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { format, addDays, addMonths, isToday, isTomorrow, isAfter, isBefore } from "date-fns";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Header } from "@/components/Header";
+import { Footer } from "@/components/Footer";
 
 export default function DiagnosticBookingPage() {
   const params = useParams();
@@ -149,6 +151,9 @@ export default function DiagnosticBookingPage() {
   }
 
   return (
+    <div>
+        <Header />
+
     <div className="container mx-auto px-4 py-12">
       <Button 
         variant="outline" 
@@ -402,6 +407,8 @@ export default function DiagnosticBookingPage() {
           </Card>
         </div>
       </div>
+    </div>
+    <Footer />
     </div>
   );
 }
