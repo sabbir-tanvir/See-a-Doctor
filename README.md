@@ -18,6 +18,22 @@ SasthyaSeba was developed to address challenges in healthcare accessibility by p
 - Consultation scheduling
 - Healthcare blog and information resources
 - Responsive design for all devices
+- **Doctor scheduling system and appointment management**
+
+## Doctor Scheduling System
+
+The doctor scheduling system allows doctors to:
+
+1. **Update their available schedule**: Doctors can set which time slots they are available for appointments.
+2. **Manage appointments**: View and manage patient appointments including confirming, completing, or canceling them.
+3. **View appointment history**: Track completed and cancelled appointments.
+
+### Technical Implementation
+
+- Doctor schedules are stored with available time slots for each day
+- When a patient books an appointment, the corresponding time slot is marked as unavailable
+- The scheduling system prevents double-booking by only showing available time slots to patients
+- Doctors can view all appointments in a dedicated page with filtering and search capabilities
 
 ## Screenshots
 

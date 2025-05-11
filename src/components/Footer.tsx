@@ -162,13 +162,13 @@ export function Footer() {
             </h3>
             <ul className="space-y-3 grid grid-cols-1">
               <li>
-                <Link href="https://doctor.sasthyaseba.com/login" className="text-sm hover:text-secondary transition-all hover:translate-x-1 inline-flex items-center group">
+                <Link href="/doctor/login" className="text-sm hover:text-secondary transition-all hover:translate-x-1 inline-flex items-center group">
                   <span className="w-1.5 h-1.5 bg-secondary rounded-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity"></span>
                   Login as Doctor
                 </Link>
               </li>
               <li>
-                <Link href="https://hospital.sasthyaseba.com/register" className="text-sm hover:text-secondary transition-all hover:translate-x-1 inline-flex items-center group">
+                <Link href="/doctor/register" className="text-sm hover:text-secondary transition-all hover:translate-x-1 inline-flex items-center group">
                   <span className="w-1.5 h-1.5 bg-secondary rounded-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity"></span>
                   Work with Us
                 </Link>

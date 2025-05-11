@@ -23,6 +23,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserProfile: (displayName: string, photoURL?: string) => Promise<void>;
+  isDoctor: boolean;
+  setIsDoctor: (value: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -38,6 +40,21 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDoctor, setIsDoctor] = useState(() => {
+    // Initialize isDoctor from localStorage if available
+    if (typeof window !== 'undefined') {
+      const doctorStatus = localStorage.getItem('isDoctor');
+      return doctorStatus === 'true';
+    }
+    return false;
+  });
+
+  // Effect to save doctor status to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('isDoctor', isDoctor.toString());
+    }
+  }, [isDoctor]);
 
   // Sign up new users
   const signUp = async (email: string, password: string) => {
@@ -69,12 +86,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     return result;
   };
-
   // Sign out
   const logout = async () => {
     // Clear user data from localStorage
     localStorage.removeItem('userData');
     localStorage.removeItem('authToken');
+    localStorage.removeItem('isDoctor');
+    setIsDoctor(false);
     return signOut(auth);
   };
 
@@ -133,7 +151,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => unsubscribe();
   }, []);
-
   const value = {
     user,
     loading,
@@ -142,7 +159,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     signInWithGoogle,
     logout,
     resetPassword,
-    updateUserProfile
+    updateUserProfile,
+    isDoctor,
+    setIsDoctor
   };
 
   return (

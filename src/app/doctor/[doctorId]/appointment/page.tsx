@@ -45,13 +45,13 @@ import {
 } from "lucide-react";
 
 import { doctorsData, Doctor } from "@/data/doctorsData";
-import { format } from "date-fns";
+import { TimeSlot, getAvailableDates, getAvailableTimeSlots } from "@/data/scheduleData";
+import { format, addDays, parse, parseISO } from "date-fns";
 import { useAuth } from "@/lib/AuthContext"; // Import useAuth
 import { db } from "@/lib/firebase"; // Import Firestore database
 
 export default function DoctorAppointmentPage() {
-  const params = useParams();
-  const router = useRouter();
+  const params = useParams();  const router = useRouter();
   const doctorId = params.doctorId as string;
   const { user, loading: authLoading } = useAuth(); // Use the AuthContext
   const [doctor, setDoctor] = useState<Doctor | null>(null);
@@ -68,14 +68,11 @@ export default function DoctorAppointmentPage() {
   const [patientProblem, setPatientProblem] = useState("");
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false); // Add a submitting state
-
-  // Mock time slots for scheduling
-  const availableTimeSlots = [
-    "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM", 
-    "12:00 PM", "02:30 PM", "03:00 PM", "03:30 PM", 
-    "04:00 PM", "04:30 PM", "05:00 PM"
-  ];
-
+  // Schedule state variables
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
   useEffect(() => {
     // Populate patient info from user data if available
     if (user) {
@@ -88,9 +85,10 @@ export default function DoctorAppointmentPage() {
     
     try {
       const doctorIdNumber = parseInt(doctorId, 10);
+      let foundDoctor;
       
       if (isNaN(doctorIdNumber)) {
-        const foundDoctor = doctorsData.find(doc => doc.id.toString() === doctorId);
+        foundDoctor = doctorsData.find(doc => doc.id.toString() === doctorId);
         if (foundDoctor) {
           console.log("Found doctor by string ID:", foundDoctor);
           setDoctor(foundDoctor);
@@ -99,7 +97,7 @@ export default function DoctorAppointmentPage() {
           setError(`No doctor found with ID: ${doctorId}`);
         }
       } else {
-        const foundDoctor = doctorsData.find(doc => doc.id === doctorIdNumber);
+        foundDoctor = doctorsData.find(doc => doc.id === doctorIdNumber);
         if (foundDoctor) {
           console.log("Found doctor by numeric ID:", foundDoctor);
           setDoctor(foundDoctor);
@@ -108,6 +106,10 @@ export default function DoctorAppointmentPage() {
           setError(`No doctor found with ID: ${doctorId}`);
         }
       }
+      
+      // Fetch available dates for this doctor
+      const dates = getAvailableDates(parseInt(doctorId as string));
+      setAvailableDates(dates);
     } catch (err) {
       console.error("Error loading doctor data:", err);
       setError("Error loading doctor information. Please try again later.");
@@ -148,9 +150,27 @@ export default function DoctorAppointmentPage() {
     }
   }, [doctorId, user]);
 
+  // Update available time slots when date changes
+  useEffect(() => {
+    if (selectedDate && doctorId) {
+      const formattedDate = format(selectedDate, 'yyyy-MM-dd');
+      const doctorIdNumber = parseInt(doctorId as string);
+      const slots = getAvailableTimeSlots(doctorIdNumber, formattedDate);
+      setAvailableTimeSlots(slots);
+      setSelectedTimeSlot(""); // Clear previously selected time slot
+      setTimeSlot(""); // Also clear the actual time slot used for booking
+    }
+  }, [selectedDate, doctorId]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Validate required fields
+    if (!date || !timeSlot || !patientName || !patientPhone) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
     // Check if user is logged in before proceeding
     if (!user) {
       try {
@@ -486,11 +506,13 @@ export default function DoctorAppointmentPage() {
                       
                       <div className="flex flex-col md:flex-row gap-6">
                         <div className="md:w-7/12">
-                          <div className="bg-white rounded-md shadow-sm p-2">
-                            <Calendar
+                          <div className="bg-white rounded-md shadow-sm p-2">                            <Calendar
                               mode="single"
                               selected={date}
-                              onSelect={setDate}
+                              onSelect={(newDate) => {
+                                setDate(newDate);
+                                setSelectedDate(newDate);
+                              }}
                               className="rounded-md"
                               disabled={(date) => date < new Date()}
                               classNames={{
@@ -504,7 +526,7 @@ export default function DoctorAppointmentPage() {
                                 row: "flex w-full mt-1",
                                 cell: "h-8 w-8 text-center text-xs p-0 relative [&:has([aria-selected])]:bg-accent",
                                 day: "h-8 w-8 p-0 font-normal aria-selected:opacity-100",
-                                day_selected: "!bg-primary !text-white hover:!bg-primary hover:!text-white focus:!bg-primary focus:!text-white font-medium rounded-md",
+                                day_selected: "!bg-primary !text-white hover:!bg-primary hover:!text-white focus:!bg-primary focus:!bg-primary font-medium rounded-md",
                                 day_disabled: "text-gray-300 opacity-50",
                                 day_today: "bg-accent text-accent-foreground",
                                 day_outside: "text-muted-foreground opacity-50",
@@ -522,22 +544,21 @@ export default function DoctorAppointmentPage() {
                         </div>
                         
                         <div className="md:w-5/12">
-                          <div className="bg-white rounded-md shadow-sm p-4">
-                            <h4 className="text-sm font-medium mb-3 text-gray-700">Available Time Slots</h4>
+                          <div className="bg-white rounded-md shadow-sm p-4">                            <h4 className="text-sm font-medium mb-3 text-gray-700">Available Time Slots</h4>
                             <div className="h-[210px] overflow-y-auto pr-1 space-y-1.5">
                               {availableTimeSlots.map((slot) => (
                                 <button
-                                  key={slot}
+                                  key={`${slot.startTime}-${slot.endTime}`}
                                   type="button"
-                                  onClick={() => setTimeSlot(slot)}
+                                  onClick={() => setTimeSlot(`${slot.startTime} - ${slot.endTime}`)}
                                   className={`w-full py-2 px-3 rounded-md text-sm transition-colors flex items-center justify-between ${
-                                    timeSlot === slot 
+                                    timeSlot === `${slot.startTime} - ${slot.endTime}`
                                       ? "bg-primary text-white" 
                                       : "bg-gray-50 text-gray-800 hover:bg-gray-100"
                                   }`}
                                 >
-                                  <span>{slot}</span>
-                                  {timeSlot === slot && <CheckCircle className="h-4 w-4" />}
+                                  <span>{slot.startTime} - {slot.endTime}</span>
+                                  {timeSlot === `${slot.startTime} - ${slot.endTime}` && <CheckCircle className="h-4 w-4" />}
                                 </button>
                               ))}
                               {availableTimeSlots.length === 0 && (
