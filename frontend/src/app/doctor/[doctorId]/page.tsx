@@ -270,13 +270,6 @@ export default function DoctorProfilePage() {
                       <ChevronRight className="h-5 w-5" />
                     </Button>
                     
-                    <Button variant="outline" className="w-full flex items-center justify-between" size="lg">
-                      <div className="flex items-center">
-                        <Phone className="h-4 w-4 mr-2" />
-                        Phone Consultation
-                      </div>
-                      <ChevronRight className="h-5 w-5" />
-                    </Button>
                   </div>
                 </CardContent>
               </Card>

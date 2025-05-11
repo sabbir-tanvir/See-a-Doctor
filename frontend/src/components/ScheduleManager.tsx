@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DaySchedule, TimeSlot, generateEmptySchedule, getDoctorScheduleByEmail } from '@/data/scheduleData';
 import { format, addDays, parseISO } from 'date-fns';
+import { toast } from 'sonner';
 
 type ScheduleTabProps = {
   doctorId: number;
@@ -23,52 +24,36 @@ export function ScheduleManager({ doctorId, doctorEmail }: ScheduleTabProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<string>('0'); // Default to first tab
-    // Load the schedule when component mounts
+  
+  // Load the schedule when component mounts - just create a default schedule
   useEffect(() => {
-    async function fetchSchedule() {
+    async function initializeSchedule() {
       try {
         setLoading(true);
-        // Try to find a schedule by email first if available
-        const email = doctorEmail || user?.email;
-        if (email) {
-          const existingSchedule = getDoctorScheduleByEmail(email);
-          if (existingSchedule) {
-            setSchedule(existingSchedule.schedule);
-            setLoading(false);
-            return;
-          }
-        }
-
-        const response = await fetch(`/api/schedule?doctorId=${doctorId}`);
         
-        if (response.ok) {
-          const data = await response.json();
-          setSchedule(data.schedule);
-        } else {
-          // If no schedule exists, create a default one for the next 7 days
-          const today = new Date();
-          const defaultSchedule = generateEmptySchedule(doctorId, today, 7, user?.email);
-          setSchedule(defaultSchedule.schedule);
-        }
-      } catch (error) {
-        console.error('Error fetching schedule:', error);
-        setError('Failed to load schedule. Please try again.');
-        
-        // Create default schedule on error
+        // Always create a default schedule for the next 7 days
         const today = new Date();
         const defaultSchedule = generateEmptySchedule(doctorId, today, 7, user?.email);
         setSchedule(defaultSchedule.schedule);
+      } catch (error) {
+        console.error('Error initializing schedule:', error);
+        setError('Failed to initialize schedule. Please try again.');
       } finally {
         setLoading(false);
       }
     }
-      fetchSchedule();
+    
+    initializeSchedule();
   }, [doctorId, doctorEmail, user?.email]);
-    // Save the schedule to the API
+  
+  // Save the schedule to the API
   const saveSchedule = async () => {
     try {
       setSaving(true);
       setError(null);
+      
+      // Log the schedule being saved to help debug
+      console.log('Saving schedule:', schedule);
       
       const response = await fetch('/api/schedule', {
         method: 'POST',
@@ -84,25 +69,48 @@ export function ScheduleManager({ doctorId, doctorEmail }: ScheduleTabProps) {
       
       if (response.ok) {
         setSuccess('Schedule saved successfully!');
+        toast.success('Schedule saved successfully!');
         // Clear success message after 3 seconds
         setTimeout(() => setSuccess(null), 3000);
       } else {
         const data = await response.json();
         setError(data.error || 'Failed to save schedule. Please try again.');
+        toast.error('Failed to save schedule');
       }
     } catch (error) {
       console.error('Error saving schedule:', error);
       setError('Failed to save schedule. Please try again.');
+      toast.error('Failed to save schedule');
     } finally {
       setSaving(false);
     }
   };
   
-  // Update a time slot's availability
+  // Update a time slot's availability with improved feedback
   const updateTimeSlotAvailability = (dayIndex: number, slotIndex: number, available: boolean) => {
-    const updatedSchedule = [...schedule];
-    updatedSchedule[dayIndex].timeSlots[slotIndex].isAvailable = available;
-    setSchedule(updatedSchedule);
+    console.log(`Updating slot: day=${dayIndex}, slot=${slotIndex}, available=${available}`);
+    
+    setSchedule(prevSchedule => {
+      const newSchedule = [...prevSchedule];
+      if (newSchedule[dayIndex] && newSchedule[dayIndex].timeSlots && newSchedule[dayIndex].timeSlots[slotIndex]) {
+        // Create a new timeSlots array to ensure state updates properly
+        newSchedule[dayIndex] = {
+          ...newSchedule[dayIndex],
+          timeSlots: [
+            ...newSchedule[dayIndex].timeSlots.slice(0, slotIndex),
+            {
+              ...newSchedule[dayIndex].timeSlots[slotIndex],
+              isAvailable: available
+            },
+            ...newSchedule[dayIndex].timeSlots.slice(slotIndex + 1)
+          ]
+        };
+        return newSchedule;
+      } else {
+        console.error('Invalid day or slot index:', dayIndex, slotIndex);
+        return prevSchedule;
+      }
+    });
   };
   
   if (loading) {
@@ -155,7 +163,7 @@ export function ScheduleManager({ doctorId, doctorEmail }: ScheduleTabProps) {
                 
                 <div className="mt-4 space-y-1">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
                       <h4 className="font-medium mb-2">Morning</h4>
                       <div className="space-y-3">
                         {day.timeSlots
@@ -163,22 +171,29 @@ export function ScheduleManager({ doctorId, doctorEmail }: ScheduleTabProps) {
                             const hour = parseInt(slot.startTime.split(':')[0]);
                             return hour < 12; // Morning slots
                           })
-                          .map((slot, slotIndex) => {
+                          .map((slot, idx) => {
                             const actualSlotIndex = day.timeSlots.findIndex(
                               s => s.startTime === slot.startTime && s.endTime === slot.endTime
                             );
                             return (
-                              <div key={`${slot.startTime}-${slot.endTime}`} className="flex items-center space-x-2">
+                              <div 
+                                key={`morning-${dayIndex}-${idx}`} 
+                                className={`flex items-center space-x-2 p-2 rounded hover:bg-gray-100 ${slot.isAvailable ? 'bg-blue-50' : ''}`}
+                                onClick={() => {
+                                  updateTimeSlotAvailability(dayIndex, actualSlotIndex, !slot.isAvailable);
+                                }}
+                              >
                                 <Checkbox
                                   id={`slot-${dayIndex}-${actualSlotIndex}`}
                                   checked={slot.isAvailable}
                                   onCheckedChange={(checked) => {
                                     updateTimeSlotAvailability(dayIndex, actualSlotIndex, checked === true);
                                   }}
+                                  className="cursor-pointer"
                                 />
                                 <label
                                   htmlFor={`slot-${dayIndex}-${actualSlotIndex}`}
-                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer w-full"
                                 >
                                   {slot.startTime} - {slot.endTime}
                                 </label>
@@ -188,7 +203,7 @@ export function ScheduleManager({ doctorId, doctorEmail }: ScheduleTabProps) {
                       </div>
                     </div>
                     
-                    <div>
+                    <div className="bg-gray-50 p-4 rounded-lg">
                       <h4 className="font-medium mb-2">Afternoon/Evening</h4>
                       <div className="space-y-3">
                         {day.timeSlots
@@ -196,22 +211,29 @@ export function ScheduleManager({ doctorId, doctorEmail }: ScheduleTabProps) {
                             const hour = parseInt(slot.startTime.split(':')[0]);
                             return hour >= 12; // Afternoon/Evening slots
                           })
-                          .map((slot, slotIndex) => {
+                          .map((slot, idx) => {
                             const actualSlotIndex = day.timeSlots.findIndex(
                               s => s.startTime === slot.startTime && s.endTime === slot.endTime
                             );
                             return (
-                              <div key={`${slot.startTime}-${slot.endTime}`} className="flex items-center space-x-2">
+                              <div 
+                                key={`afternoon-${dayIndex}-${idx}`} 
+                                className={`flex items-center space-x-2 p-2 rounded hover:bg-gray-100 ${slot.isAvailable ? 'bg-blue-50' : ''}`}
+                                onClick={() => {
+                                  updateTimeSlotAvailability(dayIndex, actualSlotIndex, !slot.isAvailable);
+                                }}
+                              >
                                 <Checkbox
-                                  id={`slot-${dayIndex}-${actualSlotIndex}`}
+                                  id={`slot-${dayIndex}-${actualSlotIndex}-pm`}
                                   checked={slot.isAvailable}
                                   onCheckedChange={(checked) => {
                                     updateTimeSlotAvailability(dayIndex, actualSlotIndex, checked === true);
                                   }}
+                                  className="cursor-pointer"
                                 />
                                 <label
-                                  htmlFor={`slot-${dayIndex}-${actualSlotIndex}`}
-                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                  htmlFor={`slot-${dayIndex}-${actualSlotIndex}-pm`}
+                                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer w-full"
                                 >
                                   {slot.startTime} - {slot.endTime}
                                 </label>
@@ -222,6 +244,10 @@ export function ScheduleManager({ doctorId, doctorEmail }: ScheduleTabProps) {
                     </div>
                   </div>
                 </div>
+                
+                <p className="text-sm text-gray-500 mt-4">
+                  Click on a time slot to mark it as {selectedTab === '0' ? 'available/unavailable' : 'available or unavailable'} for appointments.
+                </p>
               </div>
             </TabsContent>
           ))}
