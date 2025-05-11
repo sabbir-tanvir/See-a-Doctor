@@ -9,7 +9,11 @@ const {
   getDoctorsByLocation,
   doctorPhotoUpload,
   getDoctorChambers,
-  getDoctorChamberByIndex
+  getDoctorChamberByIndex,
+  getDoctorDashboard,
+  getDoctorAppointments,
+  getDoctorPatients,
+  getDoctorStats
 } = require("../controllers/doctors");
 const reviewRouter = require("./reviews");
 
@@ -47,5 +51,18 @@ router.route("/:id/chambers/:chamberIndex")
 // Upload doctor photo route
 router.route("/:id/photo")
   .put(doctorPhotoUpload);
+
+// Doctor dashboard routes
+router.route("/:id/dashboard")
+  .get(getDoctorDashboard);
+
+router.route("/:id/appointments")
+  .get(getDoctorAppointments);
+
+router.route("/:id/patients")
+  .get(getDoctorPatients);
+
+router.route("/:id/stats")
+  .get(getDoctorStats);
 
 module.exports = router;

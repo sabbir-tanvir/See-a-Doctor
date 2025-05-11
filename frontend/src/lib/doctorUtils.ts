@@ -1,20 +1,40 @@
-// Map of registered doctor emails to store doctor information
-// In a real app, this would be in a database
-export const registeredDoctors: Record<string, boolean> = {};
+import { authAPI } from './api';
 
 /**
  * Checks if an email belongs to a registered doctor
- * In a real application, this would query a database
+ * This now uses the user role from the API
  */
-export function isRegisteredDoctor(email: string): boolean {
-  // Check if this email is in our registered doctors map
-  return !!registeredDoctors[email];
+export async function isRegisteredDoctor(email: string): Promise<boolean> {
+  try {
+    // In a real application, you would make an API call to verify
+    // For now, we'll check if the user is already authenticated
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const userData = JSON.parse(userStr);
+      // Check if this user has a doctor role
+      if (userData.email === email && userData.role === 'doctor') {
+        return true;
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error checking doctor status:', error);
+    return false;
+  }
 }
 
 /**
- * Registers an email as belonging to a doctor
- * In a real application, this would update a database
+ * Registers user as a doctor
+ * In a real application, this would update the user role in the database
  */
-export function registerDoctorEmail(email: string): void {
-  registeredDoctors[email] = true;
+export async function registerDoctor(userId: string): Promise<boolean> {
+  try {
+    // This would typically involve a call to update the user role
+    // For now, we'll assume success
+    return true;
+  } catch (error) {
+    console.error('Error registering doctor:', error);
+    return false;
+  }
 }

@@ -134,13 +134,11 @@ export default function DoctorAppointmentsPage() {
       setLoading(true);
       setError(null);
       
-      // Get doctor ID from email
+      // Get doctor ID from email - this might return undefined from the sample data
       const doctorId = getDoctorIdByEmail(user?.email || "");
       
-      // Query parameter
-      const queryParam = doctorId 
-        ? `doctorId=${doctorId}` 
-        : `doctorEmail=${encodeURIComponent(user?.email || "")}`;
+      // Query parameter - always use email as a fallback
+      const queryParam = `doctorEmail=${encodeURIComponent(user?.email || "")}`;
         
       const response = await fetch(`/api/doctor/appointments?${queryParam}`);
       

@@ -11,37 +11,56 @@ const DoctorSchema = new mongoose.Schema(
       maxlength: [50, "Name can not be more than 50 characters"],
     },
     slug: String,
-    img: {
+    image: {
       type: String,
       default: "no-photo.jpg",
     },
     fee: {
-      type: String,
+      type: Number,
       required: [true, "Please add consultation fee"],
-      trim: true,
+      min: [0, "Fee can not be negative"],
     },
     gender: {
       type: String,
       enum: ["Male", "Female", "Other"],
       required: [true, "Please specify gender"],
     },
-    degrees: {
-      type: [String],
-      required: [true, "Please add degrees"],
-    },
     specialization: {
       type: String,
       required: [true, "Please add a specialization"],
       trim: true,
     },
-    experience_years: {
-      type: Number,
-      required: [true, "Please specify years of experience"],
-      min: 0,
-    },
-    consultation_type: {
+    education: {
       type: [String],
-      required: [true, "Please specify consultation types"],
+      required: [true, "Please add education details"],
+    },
+    experience: {
+      type: String,
+      required: [true, "Please specify years of experience"],
+    },
+    hospital: {
+      type: mongoose.Schema.ObjectId,
+      ref: 'Hospital',
+      required: [true, "Please specify hospital"]
+    },
+    location: {
+      type: String,
+      required: [true, "Please add location"],
+      trim: true,
+    },
+    rating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    reviews: {
+      type: Number,
+      default: 0,
+    },
+    available: {
+      type: Boolean,
+      default: true
     },
     bmdc_registration: {
       type: String,
@@ -96,30 +115,6 @@ const DoctorSchema = new mongoose.Schema(
         },
       },
     ],
-    education: {
-      type: [String],
-      required: [true, "Please add education details"],
-    },
-    location: {
-      type: String,
-      required: [true, "Please add location"],
-      trim: true,
-    },
-    availability: {
-      type: String,
-      required: [true, "Please add availability time"],
-      trim: true,
-    },
-    rating: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
-    },
-    reviews: {
-      type: Number,
-      default: 0,
-    },
     isVerified: {
       type: Boolean,
       default: false

@@ -2,6 +2,8 @@ const path = require("path");
 const Doctor = require("../models/Doctor");
 const asyncHandler = require("../middleware/async");
 const ErrorResponse = require("../utils/errorResponse");
+const Appointment = require("../models/Appointment");
+const mongoose = require("mongoose");
 
 // @desc      Get all doctors with filtering and sorting (no pagination)
 // @route     GET /api/v1/doctors
@@ -668,5 +670,174 @@ exports.deleteChamber = asyncHandler(async (req, res, next) => {
   res.status(200).json({
     success: true,
     message: "Chamber removed successfully"
+  });
+});
+
+// @desc    Get doctor dashboard data
+// @route   GET /api/v1/doctors/:id/dashboard
+// @access  Private
+exports.getDoctorDashboard = asyncHandler(async (req, res, next) => {
+  const doctor = await Doctor.findById(req.params.id);
+
+  if (!doctor) {
+    return next(
+      new ErrorResponse(`Doctor not found with id of ${req.params.id}`, 404)
+    );
+  }
+
+  // Get upcoming appointments
+  const upcomingAppointments = await Appointment.find({
+    doctor: req.params.id,
+    date: { $gte: new Date() },
+    status: { $in: ['Pending', 'Confirmed'] }
+  }).sort({ date: 1 });
+
+  // Get today's appointments
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const todayAppointments = await Appointment.find({
+    doctor: req.params.id,
+    date: { $gte: today, $lt: tomorrow },
+    status: { $in: ['Pending', 'Confirmed'] }
+  }).sort({ date: 1 });
+
+  // Get appointment statistics
+  const totalAppointments = await Appointment.countDocuments({ doctor: req.params.id });
+  const completedAppointments = await Appointment.countDocuments({ 
+    doctor: req.params.id,
+    status: 'Completed'
+  });
+  const cancelledAppointments = await Appointment.countDocuments({ 
+    doctor: req.params.id,
+    status: 'Cancelled'
+  });
+
+  res.status(200).json({
+    success: true,
+    data: {
+      doctor,
+      upcomingAppointments,
+      todayAppointments,
+      stats: {
+        totalAppointments,
+        completedAppointments,
+        cancelledAppointments,
+        completionRate: totalAppointments > 0 ? (completedAppointments / totalAppointments) * 100 : 0
+      }
+    }
+  });
+});
+
+// @desc    Get doctor appointments
+// @route   GET /api/v1/doctors/:id/appointments
+// @access  Private
+exports.getDoctorAppointments = asyncHandler(async (req, res, next) => {
+  const doctor = await Doctor.findById(req.params.id);
+
+  if (!doctor) {
+    return next(
+      new ErrorResponse(`Doctor not found with id of ${req.params.id}`, 404)
+    );
+  }
+
+  const appointments = await Appointment.find({ doctor: req.params.id })
+    .sort({ date: -1 });
+
+  res.status(200).json({
+    success: true,
+    count: appointments.length,
+    data: appointments
+  });
+});
+
+// @desc    Get doctor patients
+// @route   GET /api/v1/doctors/:id/patients
+// @access  Private
+exports.getDoctorPatients = asyncHandler(async (req, res, next) => {
+  const doctor = await Doctor.findById(req.params.id);
+
+  if (!doctor) {
+    return next(
+      new ErrorResponse(`Doctor not found with id of ${req.params.id}`, 404)
+    );
+  }
+
+  // Get unique patients from appointments
+  const appointments = await Appointment.find({ doctor: req.params.id })
+    .select('name phone')
+    .distinct('phone');
+
+  res.status(200).json({
+    success: true,
+    count: appointments.length,
+    data: appointments
+  });
+});
+
+// @desc    Get doctor statistics
+// @route   GET /api/v1/doctors/:id/stats
+// @access  Private
+exports.getDoctorStats = asyncHandler(async (req, res, next) => {
+  const doctor = await Doctor.findById(req.params.id);
+
+  if (!doctor) {
+    return next(
+      new ErrorResponse(`Doctor not found with id of ${req.params.id}`, 404)
+    );
+  }
+
+  // Get appointment statistics
+  const totalAppointments = await Appointment.countDocuments({ doctor: req.params.id });
+  const completedAppointments = await Appointment.countDocuments({ 
+    doctor: req.params.id,
+    status: 'Completed'
+  });
+  const cancelledAppointments = await Appointment.countDocuments({ 
+    doctor: req.params.id,
+    status: 'Cancelled'
+  });
+  const pendingAppointments = await Appointment.countDocuments({ 
+    doctor: req.params.id,
+    status: 'Pending'
+  });
+
+  // Get monthly statistics
+  const monthlyStats = await Appointment.aggregate([
+    {
+      $match: {
+        doctor: mongoose.Types.ObjectId(req.params.id),
+        date: { $gte: new Date(new Date().setMonth(new Date().getMonth() - 6)) }
+      }
+    },
+    {
+      $group: {
+        _id: { $month: "$date" },
+        count: { $sum: 1 },
+        completed: {
+          $sum: { $cond: [{ $eq: ["$status", "Completed"] }, 1, 0] }
+        },
+        cancelled: {
+          $sum: { $cond: [{ $eq: ["$status", "Cancelled"] }, 1, 0] }
+        }
+      }
+    },
+    {
+      $sort: { _id: 1 }
+    }
+  ]);
+
+  res.status(200).json({
+    success: true,
+    data: {
+      totalAppointments,
+      completedAppointments,
+      cancelledAppointments,
+      pendingAppointments,
+      completionRate: totalAppointments > 0 ? (completedAppointments / totalAppointments) * 100 : 0,
+      monthlyStats
+    }
   });
 });

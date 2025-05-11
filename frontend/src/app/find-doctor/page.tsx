@@ -1,356 +1,236 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import Image from "next/image";
-import Link from "next/link";
-import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  Search,
-  MapPin,
-  Star,
-  Filter,
-  Building2,
-  Clock,
-  Calendar,
-  MessageSquare,
-} from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-// Import data from the data folder
-import { doctorsData, Doctor } from "@/data/doctorsData";
-import { hospitalsData } from "@/data/hospitalsData";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { doctorsAPI } from '@/lib/api';
+import { Doctor } from '@/types/doctor';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
+import { DoctorCard } from '@/components/DoctorCard';
+import { Loader2 } from 'lucide-react';
 
 export default function FindDoctorPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [searchQuery, setSearchQuery] = useState(searchParams.get("query") || "");
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [selectedGender, setSelectedGender] = useState("");
-  const [selectedSpecialty, setSelectedSpecialty] = useState("");
-  const [selectedCity, setSelectedCity] = useState("");
-  const [selectedFaceToFace, setSelectedFaceToFace] = useState("");
-  const [selectedHospital, setSelectedHospital] = useState(searchParams.get("hospital") || "");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedGender, setSelectedGender] = useState('all');
+  const [selectedSpecialty, setSelectedSpecialty] = useState('all');
+  const [selectedLocation, setSelectedLocation] = useState('all');
+  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
 
-  // If a hospital was provided in the URL, automatically perform a search
-  React.useEffect(() => {
-    if (searchParams.get("hospital")) {
-      setSelectedHospital(searchParams.get("hospital") || "");
-      handleSearch(new Event("submit") as React.FormEvent);
-    }
-  }, [searchParams]);
-
-  // Handle search form submission
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Filter doctors based on the search criteria
-    let filtered = [...doctorsData];
-    
-    // Filter by search query (doctor name or specialization)
-    if (searchQuery.trim()) {
-      filtered = filtered.filter(doc =>
-        doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.specialization.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    
-    // Filter by gender
-    if (selectedGender) {
-      // Simple heuristic for gender based on "Dr." prefix in name
-      filtered = filtered.filter(doc => {
-        if (selectedGender === "male" && !doc.name.includes("Dr. Ms.") && !doc.name.includes("Dr. Mrs.")) {
-          return true;
-        }
-        if (selectedGender === "female" && (doc.name.includes("Dr. Ms.") || doc.name.includes("Dr. Mrs."))) {
-          return true;
-        }
-        return false;
-      });
-    }
-    
-    // Filter by specialty
-    if (selectedSpecialty) {
-      filtered = filtered.filter(doc =>
-        doc.specialization.toLowerCase().includes(selectedSpecialty.toLowerCase())
-      );
-    }
-    
-    // Filter by location/city
-    if (selectedCity) {
-      filtered = filtered.filter(doc =>
-        doc.location.toLowerCase().includes(selectedCity.toLowerCase())
-      );
-    }
-    
-    // Filter by hospital
-    if (selectedHospital) {
-      filtered = filtered.filter(doc =>
-        doc.hospital.toLowerCase() === selectedHospital.toLowerCase()
-      );
-    }
-    
-    // Update URL with search parameters for sharing/bookmarking
-    let url = `/find-doctor?query=${encodeURIComponent(searchQuery.trim())}`;
-    if (selectedGender) url += `&gender=${selectedGender}`;
-    if (selectedSpecialty) url += `&specialty=${encodeURIComponent(selectedSpecialty)}`;
-    if (selectedCity) url += `&city=${encodeURIComponent(selectedCity)}`;
-    if (selectedFaceToFace) url += `&faceToFace=${selectedFaceToFace}`;
-    if (selectedHospital) url += `&hospital=${encodeURIComponent(selectedHospital)}`;
-    
-    router.push(url, { scroll: false });
-    
-    // Update state
-    setFilteredDoctors(filtered);
-    setHasSearched(true);
-  };
-
-  // Extract unique hospitals from doctors data for hospital select options
-  const uniqueHospitals = useMemo(() => {
-    const hospitalSet = new Set<string>();
-    doctorsData.forEach(doctor => {
-      if (doctor.hospital) {
-        hospitalSet.add(doctor.hospital);
-      }
-    });
-    return Array.from(hospitalSet).sort();
+  // Fetch doctors and metadata on component mount
+  useEffect(() => {
+    fetchDoctors();
+    fetchMetadata();
   }, []);
 
-  return (
-    <main>
-      <Header />
+  const fetchMetadata = async () => {
+    try {
+      // Fetch all doctors to extract unique specialties and locations
+      const response = await doctorsAPI.getAll();
+      const doctorsData = response.data.data;
+      
+      // Extract unique specialties and locations
+      const uniqueSpecialties = Array.from(new Set(doctorsData.map(doc => doc.specialization)));
+      const uniqueLocations = Array.from(new Set(doctorsData.map(doc => doc.location)));
+      
+      setSpecialties(uniqueSpecialties);
+      setLocations(uniqueLocations);
+    } catch (err: any) {
+      console.error('Failed to fetch metadata:', err);
+    }
+  };
 
-      {/* Search Header */}
-      <section className="bg-gradient-to-r from-primary to-primary/90 text-white py-10">
-        <div className="container-custom">
-          <h1 className="text-2xl md:text-3xl text-white font-bold mb-6 text-center">
-            Find the Best Doctors in Bangladesh
-          </h1>
-          <div className="bg-white rounded-lg p-4 text-gray-900">
-            <form onSubmit={handleSearch} className="flex flex-col space-y-4">
-              {/* Top search row */}
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-grow">
+  const fetchDoctors = async () => {
+    try {
+      setLoading(true);
+      const response = await doctorsAPI.getAll();
+      setDoctors(response.data.data);
+      setFilteredDoctors(response.data.data);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to fetch doctors');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle search form submission
+  const handleSearch = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      let response;
+      
+      // If location is selected, use location API
+      if (selectedLocation !== 'all') {
+        response = await doctorsAPI.getByLocation(selectedLocation);
+      }
+      // If specialty is selected, use specialization API
+      else if (selectedSpecialty !== 'all') {
+        response = await doctorsAPI.getBySpecialization(selectedSpecialty);
+      }
+      // Otherwise get all doctors
+      else {
+        response = await doctorsAPI.getAll();
+      }
+      
+      let filtered = response.data.data;
+      
+      // Filter by search query (doctor name or specialization)
+      if (searchQuery.trim()) {
+        filtered = filtered.filter(doc =>
+          doc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          doc.specialization.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+      }
+      
+      // Filter by gender
+      if (selectedGender !== 'all') {
+        filtered = filtered.filter(doc => 
+          doc.gender.toLowerCase() === selectedGender.toLowerCase()
+        );
+      }
+      
+      setFilteredDoctors(filtered);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to search doctors');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle doctor card click
+  const handleDoctorClick = (doctorId: string) => {
+    router.push(`/doctor/${doctorId}`);
+  };
+
+  return (
+    <>
+      <Header />
+      <main className="container-custom py-10 min-h-[calc(100vh-300px)]">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold mb-8">Find a Doctor</h1>
+          
+          {/* Search Form */}
+          <Card className="mb-8">
+            <CardContent className="pt-6">
+              <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
                   <Input
                     type="text"
-                    placeholder="Search by doctor name or specialty..."
-                    className="pl-10"
+                    placeholder="Search by name or specialty"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 </div>
-                <div className="md:w-1/5">
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-                  >
-                    Search Doctors
+                <div>
+                  <Select value={selectedGender} onValueChange={setSelectedGender}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Specialty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      {specialties.map((specialty) => (
+                        <SelectItem key={specialty} value={specialty}>
+                          {specialty}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      {locations.map((location) => (
+                        <SelectItem key={location} value={location}>
+                          {location}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="md:col-span-4">
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Searching...
+                      </>
+                    ) : (
+                      'Search'
+                    )}
                   </Button>
                 </div>
-              </div>
-              
-              {/* Filter dropdowns */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
-                <Select value={selectedGender} onValueChange={setSelectedGender}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
+              </form>
+            </CardContent>
+          </Card>
 
-                <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Specialities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cardiologist">Cardiologist</SelectItem>
-                    <SelectItem value="dermatologist">Dermatologist</SelectItem>
-                    <SelectItem value="neurologist">Neurologist</SelectItem>
-                    <SelectItem value="orthopedic">Orthopedic</SelectItem>
-                    <SelectItem value="pediatrician">Pediatrician</SelectItem>
-                    <SelectItem value="gynecologist">Gynecologist</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={selectedCity} onValueChange={setSelectedCity}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="City" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="dhaka">Dhaka</SelectItem>
-                    <SelectItem value="chittagong">Chittagong</SelectItem>
-                    <SelectItem value="sylhet">Sylhet</SelectItem>
-                    <SelectItem value="rajshahi">Rajshahi</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={selectedFaceToFace} onValueChange={setSelectedFaceToFace}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Face To Face" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="yes">Yes</SelectItem>
-                    <SelectItem value="no">No</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={selectedHospital} onValueChange={setSelectedHospital}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Hospital" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {uniqueHospitals.length > 0 ? (
-                      uniqueHospitals.map(hospital => (
-                        <SelectItem key={hospital} value={hospital}>
-                          {hospital}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem disabled>No hospitals found</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      {/* Doctor Search Results Section */}
-      <section className="py-8 bg-gray-50">
-        <div className="container-custom">
-          {hasSearched ? (
-            <>
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold">
-                  {filteredDoctors.length > 0 ? `Found ${filteredDoctors.length} Doctors` : "No Doctors Found"}
-                </h2>
-                <Button variant="outline" className="flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  More Filters
-                </Button>
-              </div>
-
-              <div className="space-y-6">
-                {filteredDoctors.length > 0 ? (
-                  filteredDoctors.map(doctor => (
-                    <Card key={doctor.id} className="overflow-hidden hover:shadow-md transition-shadow">
-                      <CardContent className="p-0">
-                        <div className="flex flex-col md:flex-row">
-                          <div className="md:w-1/5 bg-gray-50 p-4 flex flex-col items-center justify-center border-r border-gray-100">
-                            <div className="relative h-32 w-32 mb-2">
-                              {doctor.image ? (
-                                <Image
-                                  src={doctor.image}
-                                  alt={doctor.name}
-                                  fill
-                                  className="object-cover rounded-full"
-                                />
-                              ) : (
-                                <Avatar className="h-32 w-32">
-                                  <AvatarFallback className="text-2xl">
-                                    {doctor.name.split(' ').map(n => n[0]).join('')}
-                                  </AvatarFallback>
-                                </Avatar>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-1 mb-1">
-                              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                              <span className="font-medium">{doctor.rating}</span>
-                              <span className="text-sm text-gray-500">({doctor.reviews})</span>
-                            </div>
-                          </div>
-
-                          <div className="md:w-3/5 p-6">
-                            <h2 className="text-xl font-bold text-primary mb-1">{doctor.name}</h2>
-                            <p className="text-secondary font-medium mb-3">{doctor.specialization}</p>
-                            <p className="text-gray-700 mb-1">{doctor.education}</p>
-                            <p className="text-gray-700 mb-4">{doctor.experience} experience</p>
-
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 mb-4">
-                              <div className="flex items-center gap-1">
-                                <Building2 className="h-4 w-4 text-gray-500" />
-                                <span className="text-sm">{doctor.hospital}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4 text-gray-500" />
-                                <span className="text-sm">{doctor.location}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Clock className="h-4 w-4 text-gray-500" />
-                                <span className="text-sm">Available Today</span>
-                              </div>
-                            </div>
-
-                            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-sm">
-                              <span className="bg-secondary/10 text-secondary px-2 py-1 rounded">
-                                Fee: ৳{doctor.fee}
-                              </span>
-                              <span className="text-gray-500">
-                                Appointment available for today
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="md:w-1/5 bg-gray-50 p-4 flex flex-col gap-3 border-l border-gray-100 justify-center">
-                            <Link href={`/doctor/${doctor.id}/appointment`} className="w-full">
-                              <Button className="w-full flex items-center gap-2">
-                                <Calendar className="h-4 w-4" />
-                                Book Appointment
-                              </Button>
-                            </Link>
-                            <Button variant="outline" className="w-full flex items-center gap-2">
-                              <MessageSquare className="h-4 w-4" />
-                              Video Consultation
-                            </Button>
-                            <Link href={`/doctor/${doctor.id}`} className="text-primary hover:text-secondary text-sm text-center">
-                              View Profile
-                            </Link>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">No doctors found matching your search criteria.</p>
-                    <p className="text-gray-500 mt-2">Try adjusting your filters or search with different keywords.</p>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-20">
-              <div className="mx-auto w-24 h-24 mb-4">
-                <Search className="w-full h-full text-gray-300" />
-              </div>
-              <h2 className="text-xl font-bold mb-2">Search for Doctors</h2>
-              <p className="text-gray-500 max-w-md mx-auto">
-                Use the search bar above to find doctors by name, specialty, or location.
-              </p>
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded mb-8">
+              {error}
             </div>
           )}
-        </div>
-      </section>
 
+          {/* Results */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index} className="animate-pulse">
+                  <CardContent className="p-6">
+                    <div className="flex items-center space-x-4">
+                      <div className="rounded-full bg-gray-200 h-16 w-16"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : filteredDoctors.length > 0 ? (
+              filteredDoctors.map((doctor) => (
+                <DoctorCard
+                  key={doctor._id}
+                  doctor={doctor}
+                  onClick={() => handleDoctorClick(doctor._id)}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500">No doctors found matching your criteria.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </main>
       <Footer />
-    </main>
+    </>
   );
 }

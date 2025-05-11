@@ -62,7 +62,7 @@ export function EmergencyCallout() {
                 </div>
                 
                 <p className="text-gray-800 text-lg leading-relaxed">
-                  Sasthya Seba Limited has introduced a brand-new health program in Bangladesh called 
+                  See a Doctor Limited has introduced a brand-new health program in Bangladesh called 
                   <span className="font-semibold text-primary"> "Home-Centric Primary Care"</span>, 
                   where a doctor and a paramedic will visit patients at home with necessary medical equipment four days a month.
                 </p>

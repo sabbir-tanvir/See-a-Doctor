@@ -44,16 +44,63 @@ import {
   CheckCircle
 } from "lucide-react";
 
-import { doctorsData, Doctor } from "@/data/doctorsData";
+import { Doctor } from "@/types/doctor";
 import { TimeSlot, getAvailableDates, getAvailableTimeSlots } from "@/data/scheduleData";
 import { format, addDays, parse, parseISO } from "date-fns";
 import { useAuth } from "@/lib/AuthContext"; // Import useAuth
 import { db } from "@/lib/firebase"; // Import Firestore database
 
+// Extend the User interface to include the uid property
+interface ExtendedUser {
+  _id: string;
+  uid?: string; // Firebase might use uid instead of _id
+  name: string;
+  email: string;
+  role: string;
+  photo?: string;
+}
+
+// Helper function to safely render education data
+const renderEducation = (education: any): string => {
+  if (!education) return 'Not available';
+  
+  if (typeof education === 'string') {
+    return education;
+  }
+  
+  if (Array.isArray(education)) {
+    return education.map(edu => {
+      if (typeof edu === 'string') return edu;
+      if (edu && typeof edu === 'object' && 'degree' in edu && 'institution' in edu) {
+        return `${edu.degree}, ${edu.institution}`;
+      }
+      return 'Education details';
+    }).join(', ');
+  }
+  
+  return 'Education information not available';
+};
+
+// Helper function to safely render hospital data
+const renderHospital = (hospital: any): string => {
+  if (!hospital) return 'Not available';
+  
+  if (typeof hospital === 'string') {
+    return hospital;
+  }
+  
+  if (typeof hospital === 'object' && hospital !== null && 'name' in hospital) {
+    return hospital.name;
+  }
+  
+  return 'Hospital information not available';
+};
+
 export default function DoctorAppointmentPage() {  const params = useParams();
   const router = useRouter();
   const doctorId = params.doctorId as string;
-  const { user, loading: authLoading } = useAuth(); // Use the AuthContext
+  const { user: authUser, loading: authLoading } = useAuth(); // Use the AuthContext
+  const user = authUser as ExtendedUser | null; // Cast to ExtendedUser type
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -77,44 +124,67 @@ export default function DoctorAppointmentPage() {  const params = useParams();
   useEffect(() => {
     // Populate patient info from user data if available
     if (user) {
-      if (user.displayName) setPatientName(user.displayName);
+      if (user.name) setPatientName(user.name);
       if (user.email) setPatientEmail(user.email || '');
     }
     
-    console.log("Doctor ID from params:", doctorId);
-    console.log("Available doctors:", doctorsData);
+    const fetchDoctorData = async () => {
+      try {
+        setLoading(true);
+        
+        console.log(`Fetching doctor with ID: ${doctorId}`);
+        // Explicitly tell the browser not to cache this request
+        const response = await fetch(`/api/doctors/${doctorId}`, {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        
+        // Log response status for debugging
+        console.log(`Doctor API response status: ${response.status}`);
+        
+        const data = await response.json();
+        console.log('Doctor data received:', data.success, data.message || '');
+        
+        if (data.success && data.data) {
+          setDoctor(data.data);
+          
+          // Log doctor's name to confirm we're getting the right data
+          console.log(`Doctor name: ${data.data.name}`);
+          
+          // If there's a message indicating sample data, show a warning toast
+          if (data.message && data.message.includes('sample data')) {
+            toast.warning("Using sample doctor data. Database connection issue.");
+          }
+        } else {
+          console.error('Doctor data not found in response:', data);
+          setError('Doctor data not found or invalid');
+          toast.error("Failed to find doctor with this ID. Please try another doctor.");
+        }
+        
+        // Fetch available dates for this doctor
+        // This will need to be updated to use real availability data
+        const doctorIdNumber = parseInt(doctorId);
+        const dates = getAvailableDates(isNaN(doctorIdNumber) ? 1 : doctorIdNumber);
+        setAvailableDates(dates);
+      } catch (err: any) {
+        console.error('Error fetching doctor:', err);
+        setError(err.message || 'Failed to load doctor information');
+        
+        // Let's still set some basic available dates even on error
+        const dates = getAvailableDates(1);
+        setAvailableDates(dates);
+        
+        // Don't redirect automatically - let the user see the error first
+        toast.error("Error loading doctor data. Please try again or select another doctor.");
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    try {
-      const doctorIdNumber = parseInt(doctorId, 10);
-      
-      if (isNaN(doctorIdNumber)) {
-        const foundDoctor = doctorsData.find(doc => doc.id.toString() === doctorId);
-        if (foundDoctor) {
-          console.log("Found doctor by string ID:", foundDoctor);
-          setDoctor(foundDoctor);
-        } else {
-          console.error("Doctor not found with ID:", doctorId);
-          setError(`No doctor found with ID: ${doctorId}`);
-        }
-      } else {
-        const foundDoctor = doctorsData.find(doc => doc.id === doctorIdNumber);
-        if (foundDoctor) {
-          console.log("Found doctor by numeric ID:", foundDoctor);
-          setDoctor(foundDoctor);
-        } else {
-          console.error("Doctor not found with numeric ID:", doctorIdNumber);
-          setError(`No doctor found with ID: ${doctorId}`);
-        }
-      }      
-      // Fetch available dates for this doctor
-      const dates = getAvailableDates(parseInt(doctorId as string));
-      setAvailableDates(dates);
-    } catch (err) {
-      console.error("Error loading doctor data:", err);
-      setError("Error loading doctor information. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
+    fetchDoctorData();
     
     // Check if there's a pending appointment in localStorage
     if (typeof window !== 'undefined') {
@@ -128,7 +198,7 @@ export default function DoctorAppointmentPage() {  const params = useParams();
             setAppointmentType(appointmentData.appointmentType || 'chamber');
             if (appointmentData.date) setDate(new Date(appointmentData.date));
             setTimeSlot(appointmentData.timeSlot || '');
-            setPatientName(appointmentData.patientName || user.displayName || '');
+            setPatientName(appointmentData.patientName || user.name || '');
             setPatientPhone(appointmentData.patientPhone || '');
             setPatientEmail(appointmentData.patientEmail || user.email || '');
             setPatientAge(appointmentData.patientAge || '');
@@ -171,12 +241,12 @@ export default function DoctorAppointmentPage() {  const params = useParams();
 
     // Check if user is logged in before proceeding
     if (!user) {
-      try {
-        // Store appointment details in localStorage to recover after login
+      // Save the appointment details to localStorage
+      if (typeof window !== 'undefined') {
         localStorage.setItem('pendingAppointment', JSON.stringify({
           doctorId,
           appointmentType,
-          date: date ? date.toISOString() : null, // Make date serializable
+          date: date?.toISOString(),
           timeSlot,
           patientName,
           patientPhone,
@@ -185,37 +255,26 @@ export default function DoctorAppointmentPage() {  const params = useParams();
           patientGender,
           patientProblem
         }));
-      } catch (error) {
-        console.error('Error saving pending appointment:', error);
       }
       
-      toast.error("Please login to confirm your appointment", {
-        description: "You'll be redirected to the login page",
-        duration: 3000,
-      });
-      
-      // Redirect to login page after a short delay
-      setTimeout(() => {
-        router.push('/login?redirect=' + encodeURIComponent(`/doctor/${doctorId}/appointment`));
-      }, 1500);
-      
+      toast.error("Please log in to book an appointment");
+      // Redirect to login
+      router.push(`/login?redirect=/doctor/${doctorId}/appointment`);
       return;
     }
     
-    // If user is logged in, proceed with appointment booking
     try {
       setSubmitting(true);
-      
-      // Format date for API
-      const appointmentDate = date ? format(date, 'yyyy-MM-dd') : '';
+      setError('');
       
       // Create appointment object
       const appointmentData = {
         doctorId,
         doctorName: doctor?.name,
+        doctorEmail: doctor?.email, // Add doctor's email for easier querying
         doctorSpecialization: doctor?.specialization,
         appointmentType,
-        appointmentDate,
+        appointmentDate: date ? format(date, 'yyyy-MM-dd') : '',
         timeSlot,
         patientName,
         patientPhone,
@@ -224,12 +283,12 @@ export default function DoctorAppointmentPage() {  const params = useParams();
         patientGender,
         patientProblem,
         status: 'pending', // pending, confirmed, completed, cancelled
-        userId: user.uid,
-        userEmail: user.email
+        userId: user?._id || '', // Use _id as the primary identifier
+        userEmail: user?.email || ''
       };
       
       // Send appointment data to our API endpoint
-      const response = await fetch('/api/appointments', {
+      const response = await fetch('/api/appointment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -237,34 +296,30 @@ export default function DoctorAppointmentPage() {  const params = useParams();
         body: JSON.stringify(appointmentData),
       });
       
-      const result = await response.json();
-      
       if (!response.ok) {
-        throw new Error(result.message || 'Failed to book appointment');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to book appointment');
       }
       
-      // Success notification
-      toast.success("Appointment confirmed successfully!", {
-        description: `Your appointment with Dr. ${doctor?.name} on ${format(date, 'PPP')} at ${timeSlot} has been booked.`,
-        duration: 5000,
-        action: {
-          label: "View Appointments",
-          onClick: () => router.push('/profile') // Redirect to profile or appointments page
-        },
-      });
+      const responseData = await response.json();
       
-      // Clear form fields
-      setDate(undefined);
-      setTimeSlot("");
-      setPatientProblem("");
-      setTermsAccepted(false);
-      
-    } catch (error) {
-      console.error("Error booking appointment:", error);
-      toast.error("Failed to book appointment", {
-        description: "Please try again later",
-        duration: 5000,
-      });
+      if (responseData.success) {
+        toast.success("Appointment booked successfully!");
+        
+        // Clear form
+        setDate(undefined);
+        setTimeSlot('');
+        setPatientProblem('');
+        
+        // Redirect to success or appointments page
+        router.push(`/doctor/appointments?success=true`);
+      } else {
+        throw new Error(responseData.message || 'Failed to book appointment');
+      }
+    } catch (err: any) {
+      console.error('Error booking appointment:', err);
+      toast.error(err.message || 'Failed to book appointment');
+      setError(err.message || 'Failed to book appointment');
     } finally {
       setSubmitting(false);
     }
@@ -371,7 +426,7 @@ export default function DoctorAppointmentPage() {  const params = useParams();
                           <Building2 className="h-4 w-4 text-primary mt-0.5" />
                           <div>
                             <p className="font-medium">Works at</p>
-                            <p className="text-gray-700">{doctor.hospital}</p>
+                            <p className="text-gray-700">{renderHospital(doctor.hospital)}</p>
                           </div>
                         </div>
                         
@@ -396,7 +451,7 @@ export default function DoctorAppointmentPage() {  const params = useParams();
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mt-0.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg>
                             <div>
                               <p className="font-medium">Education</p>
-                              <p className="text-gray-700">{doctor.education}</p>
+                              <p className="text-gray-700">{renderEducation(doctor.education)}</p>
                             </div>
                           </div>
                         )}

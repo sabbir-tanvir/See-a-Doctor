@@ -2,32 +2,32 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/lib/AuthContext';
+import { authAPI } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
+import { Loader2 } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
-  const { resetPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMessage('');
     setError('');
     setLoading(true);
 
     try {
-      await resetPassword(email);
+      await authAPI.forgotPassword(email);
       setMessage('Check your email for password reset instructions');
     } catch (err: any) {
-      setError(err.message || 'Failed to reset password. Please try again.');
+      setError(err.response?.data?.error || 'Failed to reset password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,14 @@ export default function ForgotPasswordPage() {
                   className="w-full bg-primary hover:bg-primary/90"
                   disabled={loading}
                 >
-                  {loading ? 'Sending...' : 'Reset Password'}
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    'Reset Password'
+                  )}
                 </Button>
               </form>
               <p className="mt-4 text-center text-sm text-gray-600">

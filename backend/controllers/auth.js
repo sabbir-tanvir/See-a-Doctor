@@ -8,33 +8,76 @@ const User = require('../models/User');
 // @route     POST /api/v1/auth/register
 // @access    Public
 exports.register = asyncHandler(async (req, res, next) => {
-  const { name, email, password, role } = req.body;
+  console.log('Register request received:', req.body);
+  
+  const { name, email, password, role, phone, address, gender, birthDate, specialization, education, experience, hospital, fee } = req.body;
 
-  // Create user
-  const user = await User.create({
+  // Default values for required fields if not provided
+  const userData = {
     name,
     email,
     password,
-  });
+    role: role || 'user',
+  };
 
-  // grab token and send to email
-  const confirmEmailToken = user.generateEmailConfirmToken();
+  console.log('Processing user data:', userData);
 
-  // Create reset url
-  const confirmEmailURL = `${req.protocol}://${req.get(
-    'host',
-  )}/auth/confirmemail?token=${confirmEmailToken}`;
+  // Only add optional fields if they are provided
+  if (address) userData.address = address;
+  if (gender) userData.gender = gender;
+  if (birthDate) userData.birthDate = birthDate;
 
-  const message = `You are receiving this email because you need to confirm your email address. Please make a GET request to: \n\n ${confirmEmailURL}`;
+  // Only add phone if it's a non-empty string
+  if (phone && phone.trim() !== '') {
+    userData.phone = phone;
+    console.log('Phone number provided:', phone);
+  } else {
+    console.log('No phone number provided');
+  }
 
-  user.save({ validateBeforeSave: false });
+  // Add doctor-specific fields if role is doctor
+  if (role === 'doctor') {
+    if (specialization) userData.specialization = specialization;
+    if (education) userData.education = education;
+    if (experience) userData.experience = experience;
+    if (hospital) userData.hospital = hospital;
+    if (fee) userData.fee = fee;
+  }
 
-  const sendResult = await sendEmail({
-    email: user.email,
-    subject: 'Email confirmation token',
-    message,
-  });
+  console.log('Final user data to be saved:', userData);
 
+  // Create user
+  const user = await User.create(userData);
+  console.log('User created successfully with ID:', user._id);
+
+  // Try to send confirmation email, but don't block registration if it fails
+  try {
+    // Generate email confirmation token
+    const confirmEmailToken = user.generateEmailConfirmToken();
+
+    // Create reset url
+    const confirmEmailURL = `${req.protocol}://${req.get(
+      'host',
+    )}/auth/confirmemail?token=${confirmEmailToken}`;
+
+    const message = `You are receiving this email because you need to confirm your email address. Please make a GET request to: \n\n ${confirmEmailURL}`;
+
+    user.save({ validateBeforeSave: false });
+
+    // Try to send email, but continue even if it fails
+    await sendEmail({
+      email: user.email,
+      subject: 'Email confirmation token',
+      message,
+    });
+    
+    console.log('Confirmation email sent successfully');
+  } catch (err) {
+    console.error('Failed to send confirmation email:', err.message);
+    // Continue with registration even if email fails
+  }
+
+  // Return token response regardless of email success
   sendTokenResponse(user, 200, res);
 });
 
@@ -259,5 +302,6 @@ const sendTokenResponse = (user, statusCode, res) => {
   res.status(statusCode).cookie('token', token, options).json({
     success: true,
     token,
+    data: user
   });
 };

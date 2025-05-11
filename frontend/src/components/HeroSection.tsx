@@ -49,7 +49,7 @@ export function HeroSection() {
         <div className="text-center max-w-4xl mx-auto">
           {/* Hero Title */}
           <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4 ">
-            Book a Doctor's Appointment in Just 10 Minutes with Sasthya Seba.
+          Book a Doctor's Appointment in Just 10 Minutes with See a Doctor
           </h1>
           <p className="text-lg text-gray-600 mb-5">
             Say goodbye to endless phone calls and long queues. Book doctors' appointments, video consultations, ambulance service, manage medical records, and more. Take the first step towards better health.

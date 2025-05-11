@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -12,8 +11,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Textarea } from '@/components/ui/textarea';
-import { Select } from '@/components/ui/select';
-import { registerDoctorEmail } from '@/lib/doctorUtils';
+import { Loader2 } from 'lucide-react';
+import { useAuth } from '@/lib/AuthContext';
+import { authAPI } from '@/lib/api';
 
 // List of specializations
 const specializations = [
@@ -37,8 +37,9 @@ const specializations = [
   "Nephrologist"
 ];
 
-export default function DoctorRegisterPage() {  const router = useRouter();
-  const { signUp, updateUserProfile, setIsDoctor } = useAuth();
+export default function DoctorRegisterPage() {
+  const router = useRouter();
+  const { signUp } = useAuth();
   
   // Basic auth info
   const [name, setName] = useState('');
@@ -53,7 +54,7 @@ export default function DoctorRegisterPage() {  const router = useRouter();
   const [hospital, setHospital] = useState('');
   const [location, setLocation] = useState('');
   const [fee, setFee] = useState('');
-  const [image, setImage] = useState('');
+  const [phone, setPhone] = useState('');
   
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -87,44 +88,38 @@ export default function DoctorRegisterPage() {  const router = useRouter();
     setError('');
     
     // Validate second step fields
-    if (!specialization || !education || !experience || !hospital || !location || !fee) {
+    if (!specialization || !education || !experience || !hospital || !location || !fee || !phone) {
       setError('Please fill in all required fields');
       return;
     }
     
     setLoading(true);
 
-    try {      // Create the user account
-      const result = await signUp(email, password);
-      
-      // Update the user profile with name
-      await updateUserProfile(name);
-      
-      // Set user as doctor
-      setIsDoctor(true);
-      
-      // Register this email as a doctor email
-      registerDoctorEmail(email);
-      
-      // TODO: Store additional doctor information in a database
-      // This would typically involve an API call to store the doctor's info
-      // For now, we'll simulate this with a console log
-      console.log('Doctor info to be stored:', {
+    try {
+      // Use the API directly since we need to pass additional doctor fields
+      const response = await authAPI.register({
         name,
         email,
+        password,
+        role: 'doctor',
+        phone,
+        address: location,
         specialization,
         education,
         experience,
         hospital,
-        location,
-        fee: parseFloat(fee),
-        image: image || 'https://ext.same-assets.com/174619264/3871928465.webp', // Default image
+        fee: parseFloat(fee)
       });
       
+      // Set user in AuthContext and localStorage
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.data));
+      
       // Redirect to doctor dashboard after successful registration
-      router.push('/doctor/dashboard'); 
+      router.push('/doctor/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Failed to create an account. Please try again.');
+      setError(err.response?.data?.error || 'Failed to create an account. Please try again.');
+      console.error('Registration error:', err);
     } finally {
       setLoading(false);
     }
@@ -281,6 +276,17 @@ export default function DoctorRegisterPage() {  const router = useRouter();
                     />
                   </div>
                   <div className="space-y-2">
+                    <label htmlFor="phone" className="text-sm font-medium">Phone Number*</label>
+                    <Input
+                      id="phone"
+                      type="text"
+                      placeholder="e.g. +8801712345678"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <label htmlFor="fee" className="text-sm font-medium">Consultation Fee (BDT)*</label>
                     <Input
                       id="fee"
@@ -289,16 +295,6 @@ export default function DoctorRegisterPage() {  const router = useRouter();
                       value={fee}
                       onChange={(e) => setFee(e.target.value)}
                       required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="image" className="text-sm font-medium">Profile Image URL</label>
-                    <Input
-                      id="image"
-                      type="text"
-                      placeholder="URL to your profile image (optional)"
-                      value={image}
-                      onChange={(e) => setImage(e.target.value)}
                     />
                   </div>
                   <div className="flex gap-3">
@@ -315,7 +311,14 @@ export default function DoctorRegisterPage() {  const router = useRouter();
                       className="flex-1 bg-primary hover:bg-primary/90"
                       disabled={loading}
                     >
-                      {loading ? 'Registering...' : 'Complete Registration'}
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Registering...
+                        </>
+                      ) : (
+                        'Complete Registration'
+                      )}
                     </Button>
                   </div>
                 </form>

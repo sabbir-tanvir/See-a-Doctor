@@ -31,10 +31,32 @@ import {
   CalendarClock,
   User,
   Share2,
-  ChevronRight
+  ChevronRight,
+  ArrowRight
 } from "lucide-react";
 
-import { doctorsData, Doctor } from "@/data/doctorsData";
+import { Doctor } from "@/types/doctor";
+
+// Helper function to safely render education data
+const renderEducation = (education: any): string => {
+  if (!education) return 'Not available';
+  
+  if (typeof education === 'string') {
+    return education;
+  }
+  
+  if (Array.isArray(education)) {
+    return education.map(edu => {
+      if (typeof edu === 'string') return edu;
+      if (edu && typeof edu === 'object' && 'degree' in edu && 'institution' in edu) {
+        return `${edu.degree}, ${edu.institution}`;
+      }
+      return 'Education details';
+    }).join(', ');
+  }
+  
+  return 'Education information not available';
+};
 
 export default function DoctorProfilePage() {
   const params = useParams();
@@ -45,30 +67,42 @@ export default function DoctorProfilePage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    try {
-      const doctorIdNumber = parseInt(doctorId, 10);
-      
-      if (isNaN(doctorIdNumber)) {
-        const foundDoctor = doctorsData.find(doc => doc.id.toString() === doctorId);
-        if (foundDoctor) {
-          setDoctor(foundDoctor);
-        } else {
-          setError(`No doctor found with ID: ${doctorId}`);
+    const fetchDoctor = async () => {
+      try {
+        setLoading(true);
+        setError('');
+        
+        console.log(`Fetching doctor with ID: ${doctorId}`);
+        const response = await fetch(`/api/doctors/${doctorId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch doctor: ${response.statusText}`);
         }
-      } else {
-        const foundDoctor = doctorsData.find(doc => doc.id === doctorIdNumber);
-        if (foundDoctor) {
-          setDoctor(foundDoctor);
+        
+        const data = await response.json();
+        console.log('Doctor data received:', data);
+        
+        if (data.success && data.data) {
+          setDoctor(data.data);
+          
+          // Check if this is fallback data
+          if (data._note) {
+            console.warn('Using fallback data:', data._note);
+          }
         } else {
-          setError(`No doctor found with ID: ${doctorId}`);
+          setError('Doctor not found');
+          router.push('/find-doctor');
         }
+      } catch (err: any) {
+        console.error('Error fetching doctor:', err);
+        setError(err.message || 'Failed to load doctor information');
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError("Error loading doctor information. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
-  }, [doctorId]);
+    };
+    
+    fetchDoctor();
+  }, [doctorId, router]);
 
   if (loading) {
     return (
@@ -160,14 +194,18 @@ export default function DoctorProfilePage() {
             <div className="md:w-2/4">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{doctor.name}</h1>
               <p className="text-lg text-primary font-medium mb-3">{doctor.specialization}</p>
-              <p className="text-gray-600 mb-5">{doctor.education}</p>
+              <p className="text-gray-600 mb-5">
+                {renderEducation(doctor.education)}
+              </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="flex items-start gap-2">
                   <Building2 className="h-5 w-5 text-primary mt-1" />
                   <div>
                     <p className="font-medium">Works at</p>
-                    <p className="text-gray-700">{doctor.hospital}</p>
+                    <p className="text-gray-700">
+                      {typeof doctor.hospital === 'object' ? doctor.hospital.name : doctor.hospital}
+                    </p>
                   </div>
                 </div>
                 
@@ -191,7 +229,7 @@ export default function DoctorProfilePage() {
                   <Award className="h-5 w-5 text-primary mt-1" />
                   <div>
                     <p className="font-medium">Registration No.</p>
-                    <p className="text-gray-700">ID: D{Math.floor(Math.random() * 100000)}</p>
+                    <p className="text-gray-700">ID: {doctor.bmdc_registration || `D${Math.floor(Math.random() * 100000)}`}</p>
                   </div>
                 </div>
               </div>
@@ -214,13 +252,13 @@ export default function DoctorProfilePage() {
                   </div>
                   
                   <div className="space-y-3">
-                    <Link href={`/doctor/${doctor.id}/appointment`} className="w-full">
+                    <Link href={`/doctor/${doctor._id}/appointment?type=chamber`} className="w-full">
                       <Button className="w-full flex items-center justify-between" size="lg">
                         <div className="flex items-center">
-                          <Building2 className="h-4 w-4 mr-2" />
+                          <Building2 className="h-5 w-5 mr-2" />
                           Chamber Appointment
                         </div>
-                        <ChevronRight className="h-5 w-5" />
+                        <ArrowRight className="h-4 w-4" />
                       </Button>
                     </Link>
                     
@@ -267,15 +305,15 @@ export default function DoctorProfilePage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <p className="text-gray-700">
-                        Dr. {doctor.name} is a highly skilled {doctor.specialization.toLowerCase()} with {doctor.experience} of experience in the field.
-                        {doctor.specialization.includes("Cardio") ? 
+                        {doctor.about || `Dr. ${doctor.name} is a highly skilled ${doctor.specialization.toLowerCase()} with ${doctor.experience} of experience in the field.
+                        ${doctor.specialization.includes("Cardio") ? 
                           " Specializing in heart diseases, cardiac rehabilitation, and preventive cardiology, Dr. " + doctor.name + " has helped numerous patients with heart conditions live healthier lives." :
                           " Specializing in various aspects of " + doctor.specialization.toLowerCase() + ", Dr. " + doctor.name + " is dedicated to providing comprehensive care to patients."
-                        }
+                        }`}
                       </p>
                       
                       <p className="text-gray-700">
-                        Currently practicing at {doctor.hospital}, {doctor.name} is known for {Math.random() > 0.5 ? "his" : "her"} patient-centered approach and thorough diagnostics. 
+                        Currently practicing at {typeof doctor.hospital === 'object' ? doctor.hospital.name : doctor.hospital}, {doctor.name} is known for {doctor.gender === 'Male' ? "his" : "her"} patient-centered approach and thorough diagnostics. 
                         {doctor.name} continues to stay updated with the latest advancements in medical science to provide the best care possible.
                       </p>
                       
@@ -304,22 +342,33 @@ export default function DoctorProfilePage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h3 className="font-medium mb-2">General Consultation</h3>
-                          <p className="text-gray-600 text-sm">Complete checkup and diagnosis</p>
-                        </div>
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h3 className="font-medium mb-2">{doctor.specialization} Consultation</h3>
-                          <p className="text-gray-600 text-sm">Specialized care and treatment</p>
-                        </div>
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h3 className="font-medium mb-2">Medical Certificates</h3>
-                          <p className="text-gray-600 text-sm">Health certificates and documentation</p>
-                        </div>
-                        <div className="bg-gray-50 p-4 rounded-lg">
-                          <h3 className="font-medium mb-2">Follow-up Consultations</h3>
-                          <p className="text-gray-600 text-sm">Regular check-ins and treatment monitoring</p>
-                        </div>
+                        {doctor.services && doctor.services.length > 0 ? (
+                          doctor.services.map((service, index) => (
+                            <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                              <h3 className="font-medium mb-2">{service}</h3>
+                              <p className="text-gray-600 text-sm">Professional care and treatment</p>
+                            </div>
+                          ))
+                        ) : (
+                          <>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              <h3 className="font-medium mb-2">General Consultation</h3>
+                              <p className="text-gray-600 text-sm">Complete checkup and diagnosis</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              <h3 className="font-medium mb-2">{doctor.specialization} Consultation</h3>
+                              <p className="text-gray-600 text-sm">Specialized care and treatment</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              <h3 className="font-medium mb-2">Medical Certificates</h3>
+                              <p className="text-gray-600 text-sm">Health certificates and documentation</p>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                              <h3 className="font-medium mb-2">Follow-up Consultations</h3>
+                              <p className="text-gray-600 text-sm">Regular check-ins and treatment monitoring</p>
+                            </div>
+                          </>
+                        )}
                       </div>
                       
                       <div className="mt-4">
@@ -355,11 +404,27 @@ export default function DoctorProfilePage() {
                           Education
                         </h3>
                         <div className="ml-7 space-y-4">
-                          <div className="border-l-2 border-gray-200 pl-4 pb-4 relative">
-                            <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-primary"></div>
-                            <p className="font-medium">{doctor.education}</p>
-                            <p className="text-gray-600 text-sm">Graduation Year: {2010 - Math.floor(Math.random() * 15)}</p>
-                          </div>
+                          {Array.isArray(doctor.education) ? (
+                            doctor.education.map((edu, index) => (
+                              <div key={index} className="border-l-2 border-gray-200 pl-4 pb-4 relative">
+                                <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-primary"></div>
+                                <p className="font-medium">
+                                  {typeof edu === 'string' 
+                                    ? edu 
+                                    : (edu && typeof edu === 'object' && 'degree' in edu && 'institution' in edu)
+                                      ? `${edu.degree}, ${edu.institution}`
+                                      : 'Education details not available'}
+                                </p>
+                                <p className="text-gray-600 text-sm">Completed {2010 - Math.floor(Math.random() * 15)}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="border-l-2 border-gray-200 pl-4 pb-4 relative">
+                              <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-primary"></div>
+                              <p className="font-medium">{renderEducation(doctor.education)}</p>
+                              <p className="text-gray-600 text-sm">Graduation Year: {2010 - Math.floor(Math.random() * 15)}</p>
+                            </div>
+                          )}
                           <div className="border-l-2 border-gray-200 pl-4 pb-4 relative">
                             <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-primary"></div>
                             <p className="font-medium">Specialized Training in {doctor.specialization}</p>
@@ -374,16 +439,29 @@ export default function DoctorProfilePage() {
                           Experience
                         </h3>
                         <div className="ml-7 space-y-4">
-                          <div className="border-l-2 border-gray-200 pl-4 pb-4 relative">
-                            <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-primary"></div>
-                            <p className="font-medium">{doctor.hospital}</p>
-                            <p className="text-gray-600 text-sm">Current</p>
-                          </div>
-                          <div className="border-l-2 border-gray-200 pl-4 relative">
-                            <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-primary"></div>
-                            <p className="font-medium">{doctor.specialization} Specialist</p>
-                            <p className="text-gray-600 text-sm">{doctor.experience}</p>
-                          </div>
+                          {doctor.work_experience && doctor.work_experience.length > 0 ? (
+                            doctor.work_experience.map((exp, index) => (
+                              <div key={index} className="border-l-2 border-gray-200 pl-4 pb-4 relative">
+                                <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-primary"></div>
+                                <p className="font-medium">{exp.hospital}</p>
+                                <p className="text-gray-600 text-sm">{exp.position}</p>
+                                <p className="text-gray-600 text-sm">{exp.from} - {exp.to || 'Present'}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <>
+                              <div className="border-l-2 border-gray-200 pl-4 pb-4 relative">
+                                <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-primary"></div>
+                                <p className="font-medium">{typeof doctor.hospital === 'object' ? doctor.hospital.name : doctor.hospital}</p>
+                                <p className="text-gray-600 text-sm">Current</p>
+                              </div>
+                              <div className="border-l-2 border-gray-200 pl-4 relative">
+                                <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-primary"></div>
+                                <p className="font-medium">{doctor.specialization} Specialist</p>
+                                <p className="text-gray-600 text-sm">{doctor.experience}</p>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -481,43 +559,65 @@ export default function DoctorProfilePage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="border-b pb-3">
-                    <h3 className="font-medium mb-2">{doctor.hospital}</h3>
+                    <h3 className="font-medium mb-2">{typeof doctor.hospital === 'object' ? doctor.hospital.name : doctor.hospital}</h3>
                     <p className="text-sm text-gray-600 flex items-center gap-1">
                       <MapPin className="h-4 w-4" />
                       {doctor.location}
                     </p>
                   </div>
                   
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <p className="font-medium">Sunday</p>
-                      <p className="text-gray-700">10:00 AM - 2:00 PM</p>
+                  {doctor.chamber && doctor.chamber.length > 0 ? (
+                    <div className="space-y-4">
+                      {doctor.chamber.map((chamber, index) => (
+                        <div key={index} className="border-b pb-3 last:border-0">
+                          <h4 className="font-medium mb-1">{chamber.name}</h4>
+                          <p className="text-sm text-gray-600 flex items-center gap-1 mb-1">
+                            <MapPin className="h-4 w-4" />
+                            {chamber.address}
+                          </p>
+                          <p className="text-sm text-gray-600 flex items-center gap-1 mb-1">
+                            <Phone className="h-4 w-4" />
+                            {chamber.contact}
+                          </p>
+                          <p className="text-sm text-gray-600 flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {chamber.availability}
+                          </p>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex justify-between">
-                      <p className="font-medium">Monday</p>
-                      <p className="text-gray-700">-</p>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <p className="font-medium">Sunday</p>
+                        <p className="text-gray-700">10:00 AM - 2:00 PM</p>
+                      </div>
+                      <div className="flex justify-between">
+                        <p className="font-medium">Monday</p>
+                        <p className="text-gray-700">-</p>
+                      </div>
+                      <div className="flex justify-between">
+                        <p className="font-medium">Tuesday</p>
+                        <p className="text-gray-700">6:00 PM - 9:00 PM</p>
+                      </div>
+                      <div className="flex justify-between">
+                        <p className="font-medium">Wednesday</p>
+                        <p className="text-gray-700">-</p>
+                      </div>
+                      <div className="flex justify-between">
+                        <p className="font-medium">Thursday</p>
+                        <p className="text-gray-700">6:00 PM - 9:00 PM</p>
+                      </div>
+                      <div className="flex justify-between">
+                        <p className="font-medium">Friday</p>
+                        <p className="text-gray-700">10:00 AM - 2:00 PM</p>
+                      </div>
+                      <div className="flex justify-between">
+                        <p className="font-medium">Saturday</p>
+                        <p className="text-gray-700">-</p>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <p className="font-medium">Tuesday</p>
-                      <p className="text-gray-700">6:00 PM - 9:00 PM</p>
-                    </div>
-                    <div className="flex justify-between">
-                      <p className="font-medium">Wednesday</p>
-                      <p className="text-gray-700">-</p>
-                    </div>
-                    <div className="flex justify-between">
-                      <p className="font-medium">Thursday</p>
-                      <p className="text-gray-700">6:00 PM - 9:00 PM</p>
-                    </div>
-                    <div className="flex justify-between">
-                      <p className="font-medium">Friday</p>
-                      <p className="text-gray-700">10:00 AM - 2:00 PM</p>
-                    </div>
-                    <div className="flex justify-between">
-                      <p className="font-medium">Saturday</p>
-                      <p className="text-gray-700">-</p>
-                    </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
               
@@ -526,37 +626,9 @@ export default function DoctorProfilePage() {
                   <CardTitle>Similar Doctors</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 p-3">
-                  {doctorsData
-                    // Filter for doctors with the same specialization, excluding the current one
-                    .filter(doc => doc.specialization === doctor.specialization && doc.id !== doctor.id)
-                    // Limit the results to a maximum of 3
-                    .slice(0, 3) 
-                    .map(similarDoctor => (
-                      <Link href={`/doctor/${similarDoctor.id}`} key={similarDoctor.id}>
-                        <div className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg">
-                          <Avatar>
-                            {similarDoctor.image ? (
-                              <div className="relative w-full h-full">
-                                <Image
-                                  src={similarDoctor.image}
-                                  alt={similarDoctor.name}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            ) : (
-                              <AvatarFallback>
-                                {similarDoctor.name.split(' ').map(n => n[0]).join('')}
-                              </AvatarFallback>
-                            )}
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{similarDoctor.name}</p>
-                            <p className="text-sm text-gray-600">{similarDoctor.specialization}</p>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    Similar doctors will be displayed here based on specialization.
+                  </p>
                 </CardContent>
               </Card>
             </div>

@@ -73,7 +73,7 @@ export function Footer() {
                 height={16}
                 className="mr-2"
               />
-              Sasthya Seba Ltd.
+              See a Doctor Ltd.
             </h3>
             <ul className="space-y-3 grid grid-cols-1">
               {["About Us", "Contact", "Services", "Blog", "Diseases and Conditions", "Privacy Policy", "Terms & Conditions"].map((item, index) => (
@@ -115,12 +115,7 @@ export function Footer() {
                   Find Doctors
                 </Link>
               </li>
-              <li>
-                <Link href="/ambulance" className="text-sm hover:text-secondary transition-all hover:translate-x-1 inline-flex items-center group">
-                  <span className="w-1.5 h-1.5 bg-secondary rounded-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                  Find Ambulances
-                </Link>
-              </li>
+
               <li>
                 <Link href="/privacy-policy" className="text-sm hover:text-secondary transition-all hover:translate-x-1 inline-flex items-center group">
                   <span className="w-1.5 h-1.5 bg-secondary rounded-full mr-2 opacity-0 group-hover:opacity-100 transition-opacity"></span>
@@ -224,7 +219,7 @@ export function Footer() {
         {/* Copyright Section */}
         <div className="mt-12 pt-6 border-t border-gray-700 flex flex-col sm:flex-row justify-between items-center">
           <p className="text-sm text-gray-300 mb-4 sm:mb-0">
-            Copyright © {new Date().getFullYear()} Sasthya Seba Limited. All rights reserved.
+            Copyright © {new Date().getFullYear()} See a Doctor Limited. All rights reserved.
           </p>
           <div className="flex space-x-4">
             <Link href="/privacy-policy" className="text-xs text-gray-300 hover:text-secondary">Privacy</Link>

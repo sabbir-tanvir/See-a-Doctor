@@ -22,23 +22,23 @@ const UserSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: [true, "Please add a phone number"],
-      unique: true,
+      required: false,
+      sparse: true,
       trim: true,
     },
     address: {
       type: String,
-      required: [true, "Please add an address"],
+      required: false,
       trim: true,
     },
     gender: {
       type: String,
       enum: ["Male", "Female", "Other"],
-      required: [true, "Please specify gender"],
+      required: false,
     },
     birthDate: {
       type: Date,
-      required: [true, "Please add birth date"],
+      required: false,
     },
     password: {
       type: String,
@@ -52,8 +52,28 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin"],
+      enum: ["user", "doctor", "admin"],
       default: "user",
+    },
+    // Doctor-specific fields
+    specialization: {
+      type: String,
+      trim: true,
+    },
+    education: {
+      type: String,
+      trim: true,
+    },
+    experience: {
+      type: String,
+      trim: true,
+    },
+    hospital: {
+      type: String,
+      trim: true,
+    },
+    fee: {
+      type: Number,
     },
     resetPasswordToken: String,
     resetPasswordExpire: Date,

@@ -55,7 +55,7 @@ export default function DoctorDashboardPage() {  const { user, logout, isDoctor,
           <CardContent>
             <div className="space-y-6">
               <div className="bg-primary/5 p-4 rounded-lg">
-                <h2 className="text-lg font-semibold mb-2">Welcome Dr. {user.displayName || 'Doctor'}</h2>
+                <h2 className="text-lg font-semibold mb-2">Welcome Dr. {user.name || 'Doctor'}</h2>
                 <p className="text-gray-600">Email: {user.email}</p>
               </div>
 
