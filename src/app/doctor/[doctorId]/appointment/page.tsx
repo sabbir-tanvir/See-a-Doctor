@@ -50,8 +50,8 @@ import { format, addDays, parse, parseISO } from "date-fns";
 import { useAuth } from "@/lib/AuthContext"; // Import useAuth
 import { db } from "@/lib/firebase"; // Import Firestore database
 
-export default function DoctorAppointmentPage() {
-  const params = useParams();  const router = useRouter();
+export default function DoctorAppointmentPage() {  const params = useParams();
+  const router = useRouter();
   const doctorId = params.doctorId as string;
   const { user, loading: authLoading } = useAuth(); // Use the AuthContext
   const [doctor, setDoctor] = useState<Doctor | null>(null);
@@ -73,6 +73,7 @@ export default function DoctorAppointmentPage() {
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [availableTimeSlots, setAvailableTimeSlots] = useState<TimeSlot[]>([]);
+
   useEffect(() => {
     // Populate patient info from user data if available
     if (user) {
@@ -85,10 +86,9 @@ export default function DoctorAppointmentPage() {
     
     try {
       const doctorIdNumber = parseInt(doctorId, 10);
-      let foundDoctor;
       
       if (isNaN(doctorIdNumber)) {
-        foundDoctor = doctorsData.find(doc => doc.id.toString() === doctorId);
+        const foundDoctor = doctorsData.find(doc => doc.id.toString() === doctorId);
         if (foundDoctor) {
           console.log("Found doctor by string ID:", foundDoctor);
           setDoctor(foundDoctor);
@@ -97,7 +97,7 @@ export default function DoctorAppointmentPage() {
           setError(`No doctor found with ID: ${doctorId}`);
         }
       } else {
-        foundDoctor = doctorsData.find(doc => doc.id === doctorIdNumber);
+        const foundDoctor = doctorsData.find(doc => doc.id === doctorIdNumber);
         if (foundDoctor) {
           console.log("Found doctor by numeric ID:", foundDoctor);
           setDoctor(foundDoctor);
@@ -105,8 +105,7 @@ export default function DoctorAppointmentPage() {
           console.error("Doctor not found with numeric ID:", doctorIdNumber);
           setError(`No doctor found with ID: ${doctorId}`);
         }
-      }
-      
+      }      
       // Fetch available dates for this doctor
       const dates = getAvailableDates(parseInt(doctorId as string));
       setAvailableDates(dates);
@@ -146,8 +145,7 @@ export default function DoctorAppointmentPage() {
         }
       } catch (error) {
         console.error('Error retrieving pending appointment:', error);
-      }
-    }
+      }    }
   }, [doctorId, user]);
 
   // Update available time slots when date changes

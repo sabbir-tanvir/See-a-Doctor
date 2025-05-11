@@ -407,14 +407,14 @@ export default function DoctorAppointmentsPage() {
                 
                 <div className="space-y-2 w-52">
                   <Label htmlFor="date">Date Filter</Label>
-                  <Dialog>                    <DialogTrigger asChild>
+                  <Dialog>
+                    <DialogTrigger asChild>
                       <Button variant="outline" className="w-full justify-start text-left font-normal" id="date">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {dateFilter ? format(dateFilter, 'PPP') : 'Pick a date'}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="p-0" style={{ maxWidth: '400px' }}>
-                      <DialogTitle className="sr-only">Pick a date</DialogTitle>
                       <Calendar
                         mode="single"
                         selected={dateFilter}
