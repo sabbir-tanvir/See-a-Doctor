@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { PackageRequestForm } from "@/components/PackageRequestForm";
+import { Toast, useToast } from "@/components/Toast";
 
 export default function OnCallDoctorPage() {
   const packages = [
@@ -27,7 +29,7 @@ export default function OnCallDoctorPage() {
       price: "৳ 4999",
       button: "Request this package",
       description:
-        'Sasthya Seba Limited has introduced a brand-new health program in Bangladesh called "Home-Centric Primary Care", where a doctor and a paramedic will visit patients at home with necessary medical equipment’s four days a month.',
+        'See a Doctor Limited has introduced a brand-new health program in Bangladesh called "Home-Centric Primary Care", where a doctor and a paramedic will visit patients at home with necessary medical equipment’s four days a month.',
       features: [
         "Monthly 4 visit.",
         "1 MBBS Doctor & 1 Physiotherapist",
@@ -50,6 +52,35 @@ export default function OnCallDoctorPage() {
   ];
 
   const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<{title: string; price: string} | null>(null);
+  const { toast, showToast, hideToast } = useToast();
+
+  const handlePackageRequest = (pkg: {title: string; price: string}) => {
+    setSelectedPackage(pkg);
+    setFormModalOpen(true);
+  };
+
+  type FormData = {
+    name: string;
+    phone: string;
+    email: string;
+    address: string;
+    date: string;
+    time: string;
+    additionalInfo: string;
+  };
+
+  const handleFormSubmit = (formData: FormData) => {
+    // Here you would normally send the data to your backend
+    console.log("Form submitted:", formData);
+    
+    // Close the form modal
+    setFormModalOpen(false);
+    
+    // Show success toast
+    showToast(`Your request for ${selectedPackage?.title} has been submitted successfully!`);
+  };
 
   return (
     <main>
@@ -72,7 +103,10 @@ export default function OnCallDoctorPage() {
               <h2 className="text-2xl font-bold mb-2">{pkg.title}</h2>
               <p className="text-primary font-semibold mb-2">{pkg.subtitle}</p>
               <div className="text-3xl font-bold text-secondary mb-4">{pkg.price}</div>
-              <button className="bg-primary text-white px-6 py-2 rounded font-semibold mb-4 hover:bg-primary/90 transition">
+              <button
+                className="bg-primary text-white px-6 py-2 rounded font-semibold mb-4 hover:bg-primary/90 transition"
+                onClick={() => handlePackageRequest(pkg)}
+              >
                 {pkg.button}
               </button>
               <p className="mb-4 text-gray-700">{pkg.description}</p>
@@ -134,6 +168,25 @@ export default function OnCallDoctorPage() {
         </div>
       </section>
       <Footer />
+
+      {formModalOpen && selectedPackage && (
+        <PackageRequestForm
+          isOpen={formModalOpen}
+          onClose={() => setFormModalOpen(false)}
+          packageInfo={{
+            title: selectedPackage.title,
+            price: selectedPackage.price
+          }}
+          onSubmit={handleFormSubmit}
+        />
+      )}
+      {toast.visible && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={hideToast}
+        />
+      )}
     </main>
   );
 }
